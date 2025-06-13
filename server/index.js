@@ -18,7 +18,7 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = [""];
+const allowedOrigins = [process.env.CLIENT_URL];
  
 app.use(cors({
     origin: function (origin, callback) {

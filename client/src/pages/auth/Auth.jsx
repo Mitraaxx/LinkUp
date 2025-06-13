@@ -3,10 +3,12 @@ import { FaUser, FaLock } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../../apiClient';
+import { useUser } from '../../context/userContext';
 
 function Auth({type}) {
+    const {updateUser} = useUser();
     const navigate = useNavigate();
-    // const { updateUser } = useUser(); // Uncomment this when you have the context
+
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -26,7 +28,7 @@ function Auth({type}) {
         }
         setLoading(true);
         try {
-            const endpoint = type === 'signup' ? '/auth/signup' : '/auth/login';
+            const endpoint = type === 'signup' ? '/auth/register' : '/auth/Login';
             const response = await apiClient.post(endpoint, {
                 username: formData.username,
                 password: formData.password
@@ -36,7 +38,7 @@ function Auth({type}) {
                 navigate('/login')
             }
             if (type === 'login') {
-                // updateUser(response.data) // Uncomment when you have the context
+                updateUser(response.data) 
                 // Save token in cookies
                 const date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
                 const expires = "expires=" + date.toUTCString();
