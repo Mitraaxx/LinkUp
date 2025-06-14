@@ -127,7 +127,7 @@ function Auth({type}) {
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-500 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                             <span className="relative z-10">
-                                {loading ? 'Processing...' : type === 'signup' ? 'Create Account' : 'Sign In'}
+                                {loading ? 'Processing...' : type === 'signup' ? 'Create Account' : 'Log In'}
                             </span>
                         </button>
                     </form>
@@ -141,7 +141,7 @@ function Auth({type}) {
                                 <>
                                     Already have an account?{' '}
                                     <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 hover:underline">
-                                        Sign In
+                                        Log In
                                     </Link>
                                 </>
                             ) : (
