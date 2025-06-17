@@ -88,6 +88,10 @@ io.on("connection", (socket) => {
         console.log(`User ${user.name} joined with socket ID: ${socket.id}`);
     });
 
+    socket.on("callToUser", (data)=>{
+        console.log("Incoming call from -", data);
+    })
+
     socket.on("disconnect", () => {
         const user = onlineUsers.find((u) => u.socketId === socket.id);
         onlineUsers = onlineUsers.filter((u) => u.socketId !== socket.id);
