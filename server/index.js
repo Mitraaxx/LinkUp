@@ -6,20 +6,24 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
 const dbConnect = require('./db/dbConnect');
-const {readdirSync} = require('fs')
-const {route} = require('../server/routes/authRoute');
+const {readdirSync} = require('fs');
 const authRoute = require('./routes/authRoute');
 const userRoute = require('./routes/userRoute');
 
+// Use require for Node.js modules instead of import
+const {createServer} = require('http');
+const {Server} = require('socket.io');
 
 dotenv.config();
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
+// Create HTTP server
+const server = createServer(app);
+
 const allowedOrigins = [process.env.CLIENT_URL];
- 
+
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
@@ -38,16 +42,73 @@ app.use(cookieParser());
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 
+app.get('/', (req, res) => {
+    res.json('hi');
+});
 
-app.get('/', (req,res)=>{
-    res.json('hi')
-})
+// Initialize Socket.IO with correct syntax
+const io = new Server(server, {
+    pingTimeout: 60000,
+    cors: {
+        origin: allowedOrigins[0],
+        methods: ["GET", "POST"],
+    }
+});
 
-const server = () => {
-    dbConnect()
-    app.listen(PORT, ()=>{
-        console.log('listening to port:', PORT)
-    })
-}
+console.log("Success - Socket.io Initialized with CORS");
 
-server()
+let onlineUsers = []; // Fixed variable name for consistency
+
+io.on("connection", (socket) => {
+    console.log(`Info - new Connection: ${socket.id}`);
+    socket.emit("me", socket.id);
+
+    socket.on("join", (user) => {
+        if (!user || !user.id) {
+            console.log("Invalid User data");
+            return;
+        }
+        
+        socket.join(user.id);
+        
+        // Fixed syntax error - missing parentheses
+        const existingUser = onlineUsers.find((u) => u.userId === user.id);
+        
+        if (existingUser) {
+            existingUser.socketId = socket.id;
+        } else {
+            onlineUsers.push({
+                userId: user.id, // Fixed property name consistency
+                name: user.name,
+                socketId: socket.id
+            });
+        }
+
+        io.emit("online-users", onlineUsers);
+        console.log(`User ${user.name} joined with socket ID: ${socket.id}`);
+    });
+
+    socket.on("disconnect", () => {
+        const user = onlineUsers.find((u) => u.socketId === socket.id);
+        onlineUsers = onlineUsers.filter((u) => u.socketId !== socket.id);
+
+        io.emit("online-users", onlineUsers);
+
+        // Fixed typo: 'mit' to 'emit'
+        socket.broadcast.emit("disconnectUser", { disUser: socket.id });
+
+        console.log("Info - Disconnected:", socket.id);
+        if (user) {
+            console.log(`User ${user.name} disconnected`);
+        }
+    });
+});
+
+const startServer = () => {
+    dbConnect();
+    server.listen(PORT, () => {
+        console.log('Server listening on port:', PORT);
+    });
+};
+
+startServer();
