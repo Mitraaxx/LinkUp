@@ -13,6 +13,8 @@ const userRoute = require('./routes/userRoute');
 // Use require for Node.js modules instead of import
 const {createServer} = require('http');
 const {Server} = require('socket.io');
+const { profile } = require('console');
+
 
 dotenv.config();
 
@@ -89,7 +91,41 @@ io.on("connection", (socket) => {
     });
 
     socket.on("callToUser", (data)=>{
-        console.log("Incoming call from -", data);
+    console.log("Incoming call from -", data);
+    // Fixed: Use correct variable name 'onlineUsers' instead of 'onlineUser'
+    const call = onlineUsers.find((user)=> user.userId == data.callToUserId)
+    if(!call){
+        socket.emit("userUnavailable", {message: `User is offline`})
+        return;
+    }
+
+    // emit an event to the receiver socket(caller)
+    io.to(call.socketId).emit("callToUser",{
+       signal: data.signalData,
+       from:data.from,
+       name:data.name,
+       profilepic:data.profilepic 
+    })
+})
+
+    socket.on("call-ended", (data)=>{
+        io.to(data.to).emit("callEnded",{
+            name:data.name,
+        })
+    })
+
+    socket.on("reject-call", (data)=>{
+        io.to(data.to).emit("callRejected",{
+            name:data.name,
+            profilepic:data.profilepic
+        })
+    })
+
+    socket.on("answeredCall", (data)=>{
+        io.to(data.to).emit("callAccepted",{
+            signal:data.signal,
+            from:data.from
+        })
     })
 
     socket.on("disconnect", () => {

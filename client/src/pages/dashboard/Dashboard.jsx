@@ -1,10 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaDoorClosed, FaTimes, FaSearch, FaBars, FaPhoneAlt } from "react-icons/fa";
+import {
+  FaDoorClosed,
+  FaTimes,
+  FaSearch,
+  FaBars,
+  FaPhoneAlt,
+  FaPhoneSlash,
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaVideo,
+  FaVideoSlash,
+} from "react-icons/fa";
 import { useUser } from "../../context/userContext";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../../apiClient";
 import SocketContext from "../socket/SocketContext";
-import Peer from 'simple-peer';
+import Peer from "simple-peer";
 
 function Dashboard() {
   const { user, updateUser } = useUser();
@@ -22,7 +33,16 @@ function Dashboard() {
   const [showReciverDetailPopUp, setShowReciverDetailPopUp] = useState(false);
   const [showReciverDetail, setShowReciverDetail] = useState(null);
   const [isCallActive, setIsCallActive] = useState(false);
-  const connectionRef = useRef();  
+  const connectionRef = useRef();
+  const [reciveingCall, setReciveingCall] = useState(false);
+  const [caller, setCaller] = useState(null);
+  const [callerSignal, setCallerSignal] = useState(null);
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [callRejectedPopUp, setCallRejectedPopUp] = useState(false);
+  const [callRejectedUser, setCallRejectedUser] = useState(null);
+  const reciverVideo = useRef();
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [isCamOn, setIsCamOn] = useState(true);
 
   const socket = SocketContext.getSocket();
   console.log(socket);
@@ -39,12 +59,31 @@ function Dashboard() {
       setOnlineUser(onlineUser);
     });
 
+    socket.on("callToUser", (data) => {
+      setReciveingCall(true);
+      setCaller(data);
+      setCallerSignal(data.signal);
+    });
+
+    socket.on("callEnded", (data)=>{
+       console.log("call ended by", data.name);
+       endCallCleanup();
+    })
+
+    socket.on("callRejected", (data) => {
+      setCallRejectedPopUp(true);
+      setCallRejectedUser(data);
+    });
+
     return () => {
       socket.off("me");
       socket.off("online-users");
+      socket.off("callToUser");
+      socket.off("callEnded");
+      socket.off("callRejected");
     };
   }, [user, socket]);
-  
+  console.log("getting call from", caller);
 
   console.log("Online Users State:", onlineUsers);
   const isOnlineUser = (userId) => onlineUsers.some((u) => u.userId === userId);
@@ -52,7 +91,7 @@ function Dashboard() {
   const allusers = async () => {
     // Don't fetch users if current user is not loaded
     if (!user?._id) return;
-    
+
     try {
       setLoading(true);
       const response = await apiClient.get("/user");
@@ -76,27 +115,29 @@ function Dashboard() {
   const startCall = async (targetUserId) => {
     try {
       console.log("Starting call with user:", targetUserId);
-      
+
       // Stop existing stream if any
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
 
       const currentStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user"
+          facingMode: "user",
         },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       });
 
       console.log("Stream created:", currentStream);
-      
+
+      currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
+
       setStream(currentStream);
       setSelectedUser(targetUserId);
       setIsCallActive(true);
@@ -105,41 +146,58 @@ function Dashboard() {
       setTimeout(() => {
         if (myVideo.current && currentStream) {
           myVideo.current.srcObject = currentStream;
-          myVideo.current.muted = true;
+          myVideo.current.muted = false;
           myVideo.current.volume = 0;
-          
+
           // Ensure video plays
-          myVideo.current.play().catch(e => {
+          myVideo.current.play().catch((e) => {
             console.log("Video play failed:", e);
           });
         }
       }, 100);
 
-       currentStream.getAudioTracks().forEach(track => (track.enabled = true));
+      currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
+      setCallRejectedPopUp(false);
       setIsSidebarOpen(false);
-      console.log("calling to :" , showReciverDetail._id);
+      setSelectedUser(showReciverDetail._id);
+      console.log("calling to :", showReciverDetail._id);
 
       // ✅ Create a new Peer connection (WebRTC) as the call initiator
       const peer = new Peer({
-          initiator: true, // ✅ This user starts the call
-          trickle: false, // ✅ Prevents trickling of ICE candidates, ensuring a single signal exchange
-          stream:currentStream // ✅ Attach the local media stream
-      })
+        initiator: true, // ✅ This user starts the call
+        trickle: false, // ✅ Prevents trickling of ICE candidates, ensuring a single signal exchange
+        stream: currentStream, // ✅ Attach the local media stream
+      });
 
       // ✅ Handle the "signal" event (this occurs when the WebRTC handshake is initiated)
-      peer.on("signal", (data)=>{
+      peer.on("signal", (data) => {
         // ✅ Emit a "callToUser" event to the server with necessary call details
-        socket.emit("callToUser",{
+        socket.emit("callToUser", {
           callToUserId: showReciverDetail._id,
           signalData: data,
           from: me,
           name: user.username,
-          profilepic:user.profilepic
-        })
-      })
+          profilepic: user.profilepic,
+        });
+      });
 
-      connectionRef.current = peer
+      peer.on("stream", (remoteStream) => {
+        if (reciverVideo.current) {
+          reciverVideo.current.srcObject = remoteStream;
+          reciverVideo.current.muted = false;
+          reciverVideo.current.volume = 1.0;
+        }
+      });
 
+      socket.once("callAccepted", (data) => {
+        setCallRejectedPopUp(false);
+        setCallAccepted(true);
+        setCaller(data.from);
+        peer.signal(data.signal);
+      });
+
+      connectionRef.current = peer;
+      setShowReciverDetailPopUp(false);
     } catch (error) {
       console.log("Error accessing media device:", error);
       alert("Unable to access camera/microphone. Please check permissions.");
@@ -155,8 +213,8 @@ function Dashboard() {
       myVideo.current.srcObject = stream;
       myVideo.current.muted = true;
       myVideo.current.volume = 0;
-      
-      myVideo.current.play().catch(e => {
+
+      myVideo.current.play().catch((e) => {
         console.log("Video play failed:", e);
       });
     }
@@ -167,7 +225,7 @@ function Dashboard() {
       // Exclude current logged-in user
       u._id !== user?._id &&
       ((u.username?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-      (u.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()))
+        (u.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()))
   );
 
   const handleSelectedUser = (selectedUserData) => {
@@ -176,14 +234,138 @@ function Dashboard() {
     setShowReciverDetailPopUp(true);
   };
 
+  const handleacceptCall = async () => {
+    try {
+      const currentStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      setStream(currentStream);
+      setCallAccepted(true);
+      setReciveingCall(false); // Changed from true to false
+      setIsSidebarOpen(false);
+
+      // Set up local video
+      if (myVideo.current) {
+        myVideo.current.srcObject = currentStream;
+        myVideo.current.muted = true;
+        myVideo.current.volume = 0;
+      }
+
+      currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
+
+      // Create peer connection for the call receiver
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: currentStream,
+      });
+
+      // Handle signal generation
+      peer.on("signal", (data) => {
+        socket.emit("answeredCall", {
+          signal: data,
+          from: me,
+          to: caller.from,
+        });
+      });
+
+      // Handle receiving remote stream - THIS WAS MISSING PROPER SETUP
+      peer.on("stream", (remoteStream) => {
+        console.log("Received remote stream:", remoteStream);
+        if (reciverVideo.current) {
+          reciverVideo.current.srcObject = remoteStream;
+          reciverVideo.current.muted = false;
+          reciverVideo.current.volume = 1.0;
+
+          // Ensure the video plays
+          reciverVideo.current.play().catch((e) => {
+            console.log("Remote video play failed:", e);
+          });
+        }
+      });
+
+      // CRITICAL: Signal the caller's offer to complete the connection
+      peer.signal(callerSignal);
+
+      // Store the peer connection reference
+      connectionRef.current = peer;
+    } catch (error) {
+      console.log("Error in accepting call:", error);
+      alert("Unable to access camera/microphone. Please check permissions.");
+    }
+  };
+
+  const handlerejectCall = () => {
+    setReciveingCall(false);
+    setCallAccepted(false);
+    socket.emit("reject-call", {
+      to: caller.from,
+      name: user.username,
+      profilepic: user.profilepic,
+    });
+  };
+
+  const endCallCleanup = ()=>{
+    if(stream){
+      stream.getTracks().forEach((track)=>track.stop());
+    }
+      if(reciverVideo.current){
+        reciverVideo.current.srcObject = null;
+      }
+      if(myVideo.current){
+        myVideo.current.srcObject = null;
+      }
+
+      connectionRef.current?.destroy();
+
+      setStream(null);
+      setReciveingCall(false);
+      setCallAccepted(false);
+      setSelectedUser(null);
+      setTimeout(()=>{
+        window.location.related();
+      },100)
+  }
+
+  // toggle mic
+  const toggleMic = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isMicOn;
+        setIsMicOn(audioTrack.enabled);
+      }
+    }
+  };
+
+  const toggleCam = () => {
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isCamOn;
+        setIsCamOn(videoTrack.enabled);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     try {
       // Stop video stream before logout
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         setStream(null);
       }
-      
+
       await apiClient.post("/auth/logout");
       socket.off("disconnect");
       socket.disconnect();
@@ -203,30 +385,23 @@ function Dashboard() {
     }
   };
 
+  const handelendCall=()=>{
+    socket.emit("call-endend")
+  }
+
   const handleCallEnd = () => {
-    console.log("Ending call");
-    
-    if (stream) {
-      stream.getTracks().forEach(track => {
-        console.log("Stopping track:", track.kind);
-        track.stop();
-      });
-      setStream(null);
-    }
-    
-    if (myVideo.current) {
-      myVideo.current.srcObject = null;
-    }
-    
-    setSelectedUser(null);
-    setIsCallActive(false);
-  };
+    socket.emit("Ending call",{
+      to:caller.from || selectedUser._id,
+      name:user.username
+    })
+    endCallCleanup();
+  }
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -395,9 +570,22 @@ function Dashboard() {
 
           {/* Welcome */}
           <div className="max-w-4xl mx-auto">
-            {isCallActive && stream ? (
-              <div className="relative">
-                {/* Video Call Interface */}
+            {(isCallActive && stream) || reciveingCall || callAccepted ? (
+              <div className="relative w-full h-screen bg-black">
+                {/* Remote video (full screen) */}
+                <video
+                  ref={reciverVideo}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain"
+                  onLoadedMetadata={() =>
+                    console.log("Remote video metadata loaded")
+                  }
+                  onCanPlay={() => console.log("Remote video can play")}
+                  onError={(e) => console.log("Remote video error:", e)}
+                />
+
+                {/* Local video (picture-in-picture) */}
                 <div className="fixed bottom-4 right-4 bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20">
                   <video
                     ref={myVideo}
@@ -405,9 +593,11 @@ function Dashboard() {
                     playsInline
                     muted
                     className="w-48 h-36 md:w-64 md:h-48 object-cover bg-black"
-                    onLoadedMetadata={() => console.log("Video metadata loaded")}
-                    onCanPlay={() => console.log("Video can play")}
-                    onError={(e) => console.log("Video error:", e)}
+                    onLoadedMetadata={() =>
+                      console.log("Local video metadata loaded")
+                    }
+                    onCanPlay={() => console.log("Local video can play")}
+                    onError={(e) => console.log("Local video error:", e)}
                   />
                   <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
                     You
@@ -420,18 +610,49 @@ function Dashboard() {
                   </button>
                 </div>
 
-                {/* Call Status */}
-                <div className="bg-white/80 backdrop-blur-sm border border-blue-200/50 p-6 rounded-xl shadow-lg shadow-blue-200/30">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    📞 In Call with {users.find(u => u._id === selectedUser)?.username}
-                  </h2>
-                  <p className="text-gray-600">
-                    Your camera is active. The other user will see your video when they join.
-                  </p>
-                  <div className="mt-4 text-sm text-gray-500">
-                    Stream Status: {stream ? '✅ Active' : '❌ Inactive'}
-                  </div>
-                </div>
+                {/* userName + buttons */}
+            <div className="absolute top-4 left-4 text-white text-lg font-bold flex gap-2 items-center">
+            <button
+              type="button"
+              className="md:hidden text-2xl text-white cursor-pointer"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <FaBars />
+            </button>
+            {caller?.username || "Caller"}
+          </div>
+
+          {/* Call Controls */}
+          <div className="absolute bottom-4 w-full flex justify-center gap-4">
+            <button
+              type="button"
+              className="bg-red-600 p-4 rounded-full text-white shadow-lg cursor-pointer"
+              onClick={handelendCall}
+            >
+              <FaPhoneSlash size={24} />
+            </button>
+            {/* 🎤 Toggle Mic */}
+            <button
+              type="button"
+              onClick={toggleMic}
+              className={`p-4 rounded-full text-white shadow-lg cursor-pointer transition-colors ${isMicOn ? "bg-green-600" : "bg-red-600"
+                }`}
+            >
+              {isMicOn ? <FaMicrophone size={24} /> : <FaMicrophoneSlash size={24} />}
+            </button>
+
+            {/* 📹 Toggle Video */}
+            <button
+              type="button"
+              onClick={toggleCam}
+              className={`p-4 rounded-full text-white shadow-lg cursor-pointer transition-colors ${isCamOn ? "bg-green-600" : "bg-red-600"
+                }`}
+            >
+              {isCamOn ? <FaVideo size={24} /> : <FaVideoSlash size={24} />}
+            </button>
+
+
+          </div>
               </div>
             ) : (
               <div>
@@ -448,7 +669,8 @@ function Dashboard() {
                       <strong className="text-blue-600">
                         connect with friends instantly?
                       </strong>{" "}
-                      Just <strong className="text-blue-600">select a user</strong>{" "}
+                      Just{" "}
+                      <strong className="text-blue-600">select a user</strong>{" "}
                       and start your video call! 🎥✨
                     </p>
                   </div>
@@ -493,7 +715,9 @@ function Dashboard() {
                       />
                     ) : (
                       <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
-                        {showReciverDetail?.username?.charAt(0)?.toUpperCase() || "U"}
+                        {showReciverDetail?.username
+                          ?.charAt(0)
+                          ?.toUpperCase() || "U"}
                       </div>
                     )}
                     {/* Online Status */}
@@ -515,7 +739,9 @@ function Dashboard() {
                     {isOnlineUser(showReciverDetail._id) && (
                       <div className="flex items-center justify-center gap-2 mt-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-green-600 font-medium">Online</span>
+                        <span className="text-xs text-green-600 font-medium">
+                          Online
+                        </span>
                       </div>
                     )}
                   </div>
@@ -526,19 +752,94 @@ function Dashboard() {
                       onClick={handleCallStart}
                       disabled={isCallActive}
                       className={`flex-1 ${
-                        isCallActive 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                        isCallActive
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                       } text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98`}
                     >
                       <FaPhoneAlt size={16} />
-                      {isCallActive ? 'In Call' : 'Call'}
+                      {isCallActive ? "In Call" : "Call"}
                     </button>
                     <button
                       onClick={() => setShowReciverDetailPopUp(false)}
                       className="flex-1 bg-white/60 backdrop-blur-sm border border-gray-200/50 text-gray-600 px-6 py-3 rounded-xl font-medium hover:bg-white hover:border-gray-300 transition-all duration-300 shadow-lg hover:shadow-gray-200/30 active:scale-98"
                     >
                       Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {reciveingCall && !callAccepted && (
+            <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+                <div className="flex flex-col items-center">
+                  <p className="font-black text-xl mb-2">Call From...</p>
+                  <img
+                    src={caller?.profilepic || "/default-avatar.png"}
+                    alt="Caller"
+                    className="w-20 h-20 rounded-full border-4 border-green-500"
+                  />
+                  <h3 className="text-lg font-bold mt-3">{caller?.name}</h3>
+                  <p className="text-sm text-gray-500">{caller?.email}</p>
+                  <div className="flex gap-4 mt-5">
+                    <button
+                      type="button"
+                      onClick={handleacceptCall}
+                      className="bg-green-500 text-white px-4 py-1 rounded-lg w-28 flex gap-2 justify-center items-center"
+                    >
+                      Accept <FaPhoneAlt />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlerejectCall}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg w-28 flex gap-2 justify-center items-center"
+                    >
+                      Reject <FaPhoneSlash />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {callRejectedPopUp && (
+            <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+                <div className="flex flex-col items-center">
+                  <p className="font-black text-xl mb-2">
+                    Call Rejected From...
+                  </p>
+                  <img
+                    src={callRejectedUser.profilepic || "/default-avatar.png"}
+                    alt="Caller"
+                    className="w-20 h-20 rounded-full border-4 border-green-500"
+                  />
+                  <h3 className="text-lg font-bold mt-3">
+                    {callRejectedUser.name}
+                  </h3>
+                  <div className="flex gap-4 mt-5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        startCall(); // function that handles media and calling
+                      }}
+                      className="bg-green-500 text-white px-4 py-1 rounded-lg w-28 flex gap-2 justify-center items-center"
+                    >
+                      Call Again <FaPhoneAlt />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // endCallCleanup();
+                        setCallRejectedPopUp(false);
+                        setShowReciverDetailPopUp(false);
+                      }}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg w-28 flex gap-2 justify-center items-center"
+                    >
+                      Back <FaPhoneSlash />
                     </button>
                   </div>
                 </div>
