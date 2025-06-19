@@ -1,36 +1,33 @@
-import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'  // Use SWC version instead
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(), 
-   ],
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'  // Correct polyfill for 'global'
-      },
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-          process: true
-        }),
-        NodeModulesPolyfillPlugin()  // Required for `stream`, `crypto`, etc.
-      ]
-    }
+    nodePolyfills({
+      // Include specific polyfills you need
+      include: ['buffer', 'process', 'events', 'stream', 'crypto']
+    })
+  ],
+  
+  build: {
+    outDir: 'dist',
   },
+  
+  server: {
+    port: 3000,
+    host: true
+  },
+  
+  define: {
+    global: 'globalThis',
+    'process.env': {}
+  },
+  
   resolve: {
     alias: {
-      stream: 'stream-browserify',
-      crypto: 'crypto-browserify',
-      events: 'events/'
+      '@': '/src'
     }
-  },
-  define: {
-    global: "window" // Critical fix for `global is not defined`
   }
-});
+})
