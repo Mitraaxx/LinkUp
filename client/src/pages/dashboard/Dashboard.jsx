@@ -65,10 +65,10 @@ function Dashboard() {
       setCallerSignal(data.signal);
     });
 
-    socket.on("callEnded", (data)=>{
-       console.log("call ended by", data.name);
-       endCallCleanup();
-    })
+    socket.on("callEnded", (data) => {
+      console.log("Call ended by", data.name);
+      endCallCleanup();
+    });
 
     socket.on("callRejected", (data) => {
       setCallRejectedPopUp(true);
@@ -315,27 +315,44 @@ function Dashboard() {
     });
   };
 
-  const endCallCleanup = ()=>{
-    if(stream){
-      stream.getTracks().forEach((track)=>track.stop());
+  const endCallCleanup = () => {
+    console.log("Cleaning up call...");
+
+    // Stop all media tracks
+    if (stream) {
+      stream.getTracks().forEach((track) => {
+        track.stop();
+        console.log("Stopped track:", track.kind);
+      });
     }
-      if(reciverVideo.current){
-        reciverVideo.current.srcObject = null;
-      }
-      if(myVideo.current){
-        myVideo.current.srcObject = null;
-      }
 
-      connectionRef.current?.destroy();
+    // Clear video elements
+    if (reciverVideo.current) {
+      reciverVideo.current.srcObject = null;
+    }
+    if (myVideo.current) {
+      myVideo.current.srcObject = null;
+    }
 
-      setStream(null);
-      setReciveingCall(false);
-      setCallAccepted(false);
-      setSelectedUser(null);
-      setTimeout(()=>{
-        window.location.related();
-      },100)
-  }
+    // Destroy peer connection
+    if (connectionRef.current) {
+      connectionRef.current.destroy();
+      connectionRef.current = null;
+    }
+
+    // Reset all call-related states
+    setStream(null);
+    setReciveingCall(false);
+    setCallAccepted(false);
+    setSelectedUser(null);
+    setIsCallActive(false);
+    setCaller(null);
+    setCallerSignal(null);
+    setShowReciverDetailPopUp(false);
+    setShowReciverDetail(null);
+
+    console.log("Call cleanup completed");
+  };
 
   // toggle mic
   const toggleMic = () => {
@@ -385,17 +402,18 @@ function Dashboard() {
     }
   };
 
-  const handelendCall=()=>{
-    socket.emit("call-endend")
-  }
-
   const handleCallEnd = () => {
-    socket.emit("Ending call",{
-      to:caller.from || selectedUser._id,
-      name:user.username
-    })
+    console.log("Ending call...");
+
+    // Emit call end to other user
+    socket.emit("callEnded", {
+      to: caller?.from || selectedUser?._id,
+      name: user.username,
+    });
+
+    // Clean up locally
     endCallCleanup();
-  }
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -423,10 +441,11 @@ function Dashboard() {
         )}
 
         {/* Sidebar */}
-        <aside
-          className={`bg-white/70 backdrop-blur-3xl border border-blue-200/50 text-gray-800 w-80 h-screen p-6 space-y-6 fixed z-20 transition-transform shadow-3xl shadow-blue-200/50 flex flex-col ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+                <aside className={`bg-white/70 backdrop-blur-3xl border border-blue-200/50 text-gray-800 w-80 h-screen p-6 space-y-6 fixed z-20 transition-transform shadow-3xl shadow-blue-200/50 flex flex-col
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            ${isSidebarOpen ? "w-full sm:w-80" : ""} // Added for better mobile experience if not already present
+          `}
+
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -571,90 +590,142 @@ function Dashboard() {
           {/* Welcome */}
           <div className="max-w-4xl mx-auto">
             {(isCallActive && stream) || reciveingCall || callAccepted ? (
-              <div className="relative w-full h-screen bg-black">
-                {/* Remote video (full screen) */}
-                <video
-                  ref={reciverVideo}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-contain"
-                  onLoadedMetadata={() =>
-                    console.log("Remote video metadata loaded")
-                  }
-                  onCanPlay={() => console.log("Remote video can play")}
-                  onError={(e) => console.log("Remote video error:", e)}
-                />
+              <div className="relative w-full h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 overflow-hidden">
+                {/* Minimal background elements */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-200/10 to-cyan-100/10"></div>
 
-                {/* Local video (picture-in-picture) */}
-                <div className="fixed bottom-4 right-4 bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20">
-                  <video
-                    ref={myVideo}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-48 h-36 md:w-64 md:h-48 object-cover bg-black"
-                    onLoadedMetadata={() =>
-                      console.log("Local video metadata loaded")
-                    }
-                    onCanPlay={() => console.log("Local video can play")}
-                    onError={(e) => console.log("Local video error:", e)}
-                  />
-                  <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                    You
+                {/* Remote video (larger, full focus) */}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full bg-white/5 backdrop-blur-sm rounded-none overflow-hidden">
+                    <video
+                      ref={reciverVideo}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                      onLoadedMetadata={() =>
+                        console.log("Remote video metadata loaded")
+                      }
+                      onCanPlay={() => console.log("Remote video can play")}
+                      onError={(e) => console.log("Remote video error:", e)}
+                    />
                   </div>
-                  <button
-                    onClick={handleCallEnd}
-                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors"
-                  >
-                    <FaTimes size={12} />
-                  </button>
                 </div>
 
-                {/* userName + buttons */}
-            <div className="absolute top-4 left-4 text-white text-lg font-bold flex gap-2 items-center">
-            <button
-              type="button"
-              className="md:hidden text-2xl text-white cursor-pointer"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <FaBars />
-            </button>
-            {caller?.username || "Caller"}
-          </div>
+                {/* Minimal top bar */}
+                <div className="absolute top-4 left-4 right-4 z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* Mobile menu button */}
+                      <button
+                        type="button"
+                        className="md:hidden bg-black/20 backdrop-blur-sm text-white p-2 rounded-lg hover:bg-black/30 transition-all duration-200"
+                        onClick={() => setIsSidebarOpen(true)}
+                      >
+                        <FaBars size={16} />
+                      </button>
 
-          {/* Call Controls */}
-          <div className="absolute bottom-4 w-full flex justify-center gap-4">
-            <button
-              type="button"
-              className="bg-red-600 p-4 rounded-full text-white shadow-lg cursor-pointer"
-              onClick={handelendCall}
-            >
-              <FaPhoneSlash size={24} />
-            </button>
-            {/* 🎤 Toggle Mic */}
-            <button
-              type="button"
-              onClick={toggleMic}
-              className={`p-4 rounded-full text-white shadow-lg cursor-pointer transition-colors ${isMicOn ? "bg-green-600" : "bg-red-600"
-                }`}
-            >
-              {isMicOn ? <FaMicrophone size={24} /> : <FaMicrophoneSlash size={24} />}
-            </button>
+                      {/* Caller name - minimal */}
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                        <span className="text-white text-sm font-medium">
+                          {caller?.name || selectedUser?.username || "In Call"}
+                        </span>
+                      </div>
+                    </div>
 
-            {/* 📹 Toggle Video */}
-            <button
-              type="button"
-              onClick={toggleCam}
-              className={`p-4 rounded-full text-white shadow-lg cursor-pointer transition-colors ${isCamOn ? "bg-green-600" : "bg-red-600"
-                }`}
-            >
-              {isCamOn ? <FaVideo size={24} /> : <FaVideoSlash size={24} />}
-            </button>
+                    {/* Connection status - minimal */}
+                    <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-white text-xs">Connected</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Local video (smaller, corner) */}
+                <div className="fixed bottom-20 right-4 z-20">
+                  <div className="relative bg-black/20 backdrop-blur-sm border border-white/20 rounded-xl overflow-hidden shadow-lg">
+                    <video
+                      ref={myVideo}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-32 h-24 md:w-40 md:h-30 object-cover"
+                      onLoadedMetadata={() =>
+                        console.log("Local video metadata loaded")
+                      }
+                      onCanPlay={() => console.log("Local video can play")}
+                      onError={(e) => console.log("Local video error:", e)}
+                    />
 
-          </div>
+                    {/* Simple "You" label */}
+                    <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                      You
+                    </div>
+                  </div>
+                </div>
+
+                {/* Minimal Call Controls */}
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+                  <div className="bg-black/30 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                    <div className="flex items-center gap-2">
+                      {/* End Call Button - Smaller */}
+                      <button
+                        type="button"
+                        className="bg-red-500 hover:bg-red-600 p-3 rounded-full text-white shadow-md transition-all duration-200 active:scale-95"
+                        onClick={() => {
+                          console.log("End call button clicked");
+                          // Emit call end to other user
+                          socket.emit("callEnded", {
+                            to: caller?.from || selectedUser?._id,
+                            name: user.username,
+                          });
+                          // Clean up locally
+                          endCallCleanup();
+                        }}
+                      >
+                        <FaPhoneSlash size={16} />
+                      </button>
+
+                      {/* Toggle Microphone - Smaller */}
+                      <button
+                        type="button"
+                        onClick={toggleMic}
+                        className={`p-3 rounded-full text-white shadow-md transition-all duration-200 active:scale-95 ${
+                          isMicOn
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-gray-500 hover:bg-gray-600"
+                        }`}
+                      >
+                        {isMicOn ? (
+                          <FaMicrophone size={16} />
+                        ) : (
+                          <FaMicrophoneSlash size={16} />
+                        )}
+                      </button>
+
+                      {/* Toggle Camera - Smaller */}
+                      <button
+                        type="button"
+                        onClick={toggleCam}
+                        className={`p-3 rounded-full text-white shadow-md transition-all duration-200 active:scale-95 ${
+                          isCamOn
+                            ? "bg-blue-500 hover:bg-blue-600"
+                            : "bg-gray-500 hover:bg-gray-600"
+                        }`}
+                      >
+                        {isCamOn ? (
+                          <FaVideo size={16} />
+                        ) : (
+                          <FaVideoSlash size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
+              // Your existing welcome content
               <div>
                 <div className="flex items-center gap-5 mb-6 bg-white/80 backdrop-blur-sm border border-blue-200/50 p-6 rounded-xl shadow-lg shadow-blue-200/30">
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl">
@@ -676,7 +747,6 @@ function Dashboard() {
                   </div>
                 </div>
 
-                {/* Instructions */}
                 <div className="bg-white/80 backdrop-blur-sm border border-blue-200/50 p-6 rounded-xl shadow-lg shadow-blue-200/30 text-sm">
                   <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                     💡 How to Start a Video Call?
@@ -772,74 +842,60 @@ function Dashboard() {
             </div>
           )}
 
+
           {reciveingCall && !callAccepted && (
-            <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-                <div className="flex flex-col items-center">
-                  <p className="font-black text-xl mb-2">Call From...</p>
-                  <img
-                    src={caller?.profilepic || "/default-avatar.png"}
-                    alt="Caller"
-                    className="w-20 h-20 rounded-full border-4 border-green-500"
-                  />
-                  <h3 className="text-lg font-bold mt-3">{caller?.name}</h3>
-                  <p className="text-sm text-gray-500">{caller?.email}</p>
-                  <div className="flex gap-4 mt-5">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white/80 backdrop-blur-3xl border border-blue-200/50 rounded-2xl shadow-2xl shadow-blue-200/50 max-w-sm w-full p-8 relative">
+                {/* Incoming Call Indicator */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-4">
+                    <p className="text-lg font-semibold text-gray-800 mb-4">
+                      Incoming Call...
+                    </p>
+                  </div>
+
+                  {/* Profile Picture */}
+                  <div className="relative mb-4">
+                    {caller?.profilepic ? (
+                      <img
+                        src={caller.profilepic}
+                        alt={`${caller.name}'s profile`}
+                        className="w-20 h-20 rounded-full border-3 border-blue-200/50 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
+                        {caller?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    {/* Animated ring effect */}
+                    <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping"></div>
+                  </div>
+
+                  {/* Caller Details */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                      {caller?.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">{caller?.email}</p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 w-full">
                     <button
                       type="button"
                       onClick={handleacceptCall}
-                      className="bg-green-500 text-white px-4 py-1 rounded-lg w-28 flex gap-2 justify-center items-center"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98"
                     >
-                      Accept <FaPhoneAlt />
+                      <FaPhoneAlt size={16} />
+                      Accept
                     </button>
                     <button
                       type="button"
                       onClick={handlerejectCall}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg w-28 flex gap-2 justify-center items-center"
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-red-500/30 active:scale-98"
                     >
-                      Reject <FaPhoneSlash />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {callRejectedPopUp && (
-            <div className="fixed inset-0 bg-transparent bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-                <div className="flex flex-col items-center">
-                  <p className="font-black text-xl mb-2">
-                    Call Rejected From...
-                  </p>
-                  <img
-                    src={callRejectedUser.profilepic || "/default-avatar.png"}
-                    alt="Caller"
-                    className="w-20 h-20 rounded-full border-4 border-green-500"
-                  />
-                  <h3 className="text-lg font-bold mt-3">
-                    {callRejectedUser.name}
-                  </h3>
-                  <div className="flex gap-4 mt-5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        startCall(); // function that handles media and calling
-                      }}
-                      className="bg-green-500 text-white px-4 py-1 rounded-lg w-28 flex gap-2 justify-center items-center"
-                    >
-                      Call Again <FaPhoneAlt />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // endCallCleanup();
-                        setCallRejectedPopUp(false);
-                        setShowReciverDetailPopUp(false);
-                      }}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg w-28 flex gap-2 justify-center items-center"
-                    >
-                      Back <FaPhoneSlash />
+                      <FaPhoneSlash size={16} />
+                      Reject
                     </button>
                   </div>
                 </div>
