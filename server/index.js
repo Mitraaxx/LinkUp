@@ -34,7 +34,6 @@ app.use(cors({
             callback(new Error('Not allowed by CORS')); // Block request
         }
     },
-    // origin: "https://lynkup.netlify.app",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
 }));
