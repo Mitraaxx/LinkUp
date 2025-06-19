@@ -361,28 +361,22 @@ function Dashboard() {
     console.log("Cleaning up call...");
 
     // Stop all media tracks
-    // Stop all media tracks
-if (stream) {
-  stream.getTracks().forEach((track) => {
-    track.stop();
-    track.enabled = false; // ✅ Explicitly disable the track
-    console.log("Stopped track:", track.kind);
-  });
-}
+    if (stream) {
+      stream.getTracks().forEach((track) => {
+        track.stop();
+        console.log("Stopped track:", track.kind);
+      });
+    }
 
-// Reset mic and camera states
-setIsMicOn(true);
-setIsCamOn(true);
-
-// Clear video elements properly
-if (reciverVideo.current) {
-  reciverVideo.current.srcObject = null;
-  reciverVideo.current.pause();
-}
-if (myVideo.current) {
-  myVideo.current.srcObject = null;
-  myVideo.current.pause();
-}
+    // Clear video elements properly
+    if (reciverVideo.current) {
+      reciverVideo.current.srcObject = null;
+      reciverVideo.current.pause();
+    }
+    if (myVideo.current) {
+      myVideo.current.srcObject = null;
+      myVideo.current.pause();
+    }
 
     // Destroy peer connection
     if (connectionRef.current) {
@@ -806,35 +800,58 @@ if (myVideo.current) {
             ) : (
               // Your existing welcome content
               <div>
-                <div className="flex items-center gap-5 mb-6 bg-white/80 backdrop-blur-sm border border-blue-200/50 p-6 rounded-xl shadow-lg shadow-blue-200/30">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl">
-                    👋
+                <div className="space-y-4 px-3 sm:px-6">
+                  {/* Welcome Card */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 mb-4 sm:mb-6 bg-white/80 backdrop-blur-sm border border-blue-200/50 p-4 sm:p-6 rounded-xl shadow-lg shadow-blue-200/30">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl flex-shrink-0">
+                      👋
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <h1 className="text-xl sm:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-500 text-transparent bg-clip-text leading-tight">
+                        Hey {user?.username || "Guest"}! 👋
+                      </h1>
+                      <p className="text-sm sm:text-lg text-gray-600 mt-1 sm:mt-2 leading-relaxed">
+                        Ready to{" "}
+                        <strong className="text-blue-600">
+                          connect with friends instantly?
+                        </strong>{" "}
+                        Just{" "}
+                        <strong className="text-blue-600">select a user</strong>{" "}
+                        and start your video call! 🎥✨
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-500 text-transparent bg-clip-text">
-                      Hey {user?.username || "Guest"}! 👋
-                    </h1>
-                    <p className="text-lg text-gray-600 mt-2">
-                      Ready to{" "}
-                      <strong className="text-blue-600">
-                        connect with friends instantly?
-                      </strong>{" "}
-                      Just{" "}
-                      <strong className="text-blue-600">select a user</strong>{" "}
-                      and start your video call! 🎥✨
-                    </p>
-                  </div>
-                </div>
 
-                <div className="bg-white/80 backdrop-blur-sm border border-blue-200/50 p-6 rounded-xl shadow-lg shadow-blue-200/30 text-sm">
-                  <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    💡 How to Start a Video Call?
-                  </h2>
-                  <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                    <li>📌 Open the sidebar to see online users.</li>
-                    <li>🔍 Use the search bar to find a specific person.</li>
-                    <li>🎥 Click on a user to start a video call instantly!</li>
-                  </ul>
+                  {/* Instructions Card */}
+                  <div className="bg-white/80 backdrop-blur-sm border border-blue-200/50 p-4 sm:p-6 rounded-xl shadow-lg shadow-blue-200/30">
+                    <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent text-center sm:text-left">
+                      💡 How to Start a Video Call?
+                    </h2>
+                    <div className="space-y-2 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-50/50 transition-colors">
+                        <span className="text-blue-500 text-sm sm:text-base flex-shrink-0">
+                          📌
+                        </span>
+                        <span>Open the sidebar to see online users</span>
+                      </div>
+                      <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-50/50 transition-colors">
+                        <span className="text-blue-500 text-sm sm:text-base flex-shrink-0">
+                          🔍
+                        </span>
+                        <span>
+                          Use the search bar to find a specific person
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-50/50 transition-colors">
+                        <span className="text-blue-500 text-sm sm:text-base flex-shrink-0">
+                          🎥
+                        </span>
+                        <span>
+                          Click on a user to start a video call instantly!
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
