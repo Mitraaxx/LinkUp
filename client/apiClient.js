@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'https://linkup-server.onrender.com/api', // Replace with your actual backend URL
+  baseURL: 'https://linkup-y9zm.onrender.com/api', // Replace with your actual backend URL
   withCredentials: false, // 🔴 Disable cookie sending
 });
 
