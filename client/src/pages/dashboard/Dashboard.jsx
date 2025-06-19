@@ -299,17 +299,14 @@ function Dashboard() {
 
       // Handle receiving remote stream - THIS WAS MISSING PROPER SETUP
       peer.on("stream", (remoteStream) => {
-        console.log("Received remote stream:", remoteStream);
-        if (reciverVideo.current) {
-          reciverVideo.current.srcObject = remoteStream;
-          reciverVideo.current.muted = false;
-          reciverVideo.current.volume = 1.0;
-
-          // Ensure the video plays
-          reciverVideo.current.play().catch((e) => {
-            console.log("Remote video play failed:", e);
-          });
-           const playPromise = reciverVideo.current.play();
+  console.log("Received remote stream:", remoteStream);
+  if (reciverVideo.current) {
+    reciverVideo.current.srcObject = remoteStream;
+    reciverVideo.current.muted = false;
+    reciverVideo.current.volume = 1.0;
+    
+    // Ensure the video plays
+    const playPromise = reciverVideo.current.play();
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
@@ -322,10 +319,10 @@ function Dashboard() {
           console.log("Remote video play failed:", error);
           showTapToPlayOverlay();
         });
-  
-          
-        }
-      });
+    }
+  }
+});
+
 
       // CRITICAL: Signal the caller's offer to complete the connection
       peer.signal(callerSignal);
