@@ -4,9 +4,8 @@ const User = require('../models/userModel');
 exports.isLogin = async (req, res, next) => {
     try {
         let token;
-
-        // step 1
-        // Check Authorization header first, then cookies
+        
+        // Step 1: Get token from Authorization header or cookies
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
         } else if (req.cookies.jwt) {
@@ -20,35 +19,13 @@ exports.isLogin = async (req, res, next) => {
             });
         }
 
-        // step 2
-        // Clean and validate token format
+        // Step 2: Clean token (remove any whitespace)
         token = token.trim();
-        const tokenParts = token.split('.');
-        if (tokenParts.length !== 3) {
-            // If header token is invalid, try cookie as fallback
-            if (req.headers.authorization && req.cookies.jwt) {
-                token = req.cookies.jwt.trim();
-                const cookieParts = token.split('.');
-                if (cookieParts.length !== 3) {
-                    return res.status(401).json({
-                        success: false,
-                        message: 'Invalid token format'
-                    });
-                }
-            } else {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid token format'
-                });
-            }
-        }
 
-        // step 3
-        // Verify JWT token
+        // Step 3: Verify JWT token (let jwt.verify handle format validation)
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // step 4
-        // Get user from database
+        // Step 4: Get user from database
         const user = await User.findById(decoded.userId).select('-password');
         
         if (!user) {
@@ -58,12 +35,13 @@ exports.isLogin = async (req, res, next) => {
             });
         }
 
-        // step 5
-        // Attach user to request object
+        // Step 5: Attach user to request object
         req.user = user;
         next();
 
     } catch (error) {
+        console.error('Authentication error:', error);
+        
         if (error.name === 'JsonWebTokenError') {
             return res.status(401).json({
                 success: false,
@@ -77,7 +55,15 @@ exports.isLogin = async (req, res, next) => {
                 message: 'Token expired'
             });
         }
-
+        
+        // Handle malformed token errors
+        if (error.message && error.message.includes('malformed')) {
+            return res.status(401).json({
+                success: false,
+                message: 'Malformed token'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Server error during authentication'
