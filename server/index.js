@@ -34,7 +34,7 @@ app.use(cors({
     //         callback(new Error('Not allowed by CORS')); // Block request
     //     }
     // },
-    origin: "https://lynkup.netlify.app",
+    origin: "https://linkup-client-kby9.onrender.com",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
 }));
@@ -54,7 +54,7 @@ const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
         // origin: allowedOrigins[0],
-        origin: "https://lynkup.netlify.app",
+        origin: "https://linkup-client-kby9.onrender.com",
         methods: ["GET", "POST"],
     }
 });
