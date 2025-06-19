@@ -435,9 +435,9 @@ function Dashboard() {
     console.log("Ending call...");
 
     // Emit call end to other user
-    socket.emit("callEnded", {
-      to: caller?.from || (selectedUser && selectedUser._id),
-      name: user.username,
+    socket.emit("call-ended", {
+      to: caller?.from || selectedUser, // ✅ Send call end signal to the caller or selected user
+      name: user.username // ✅ Send the username to inform the other party
     });
 
     // Clean up locally
