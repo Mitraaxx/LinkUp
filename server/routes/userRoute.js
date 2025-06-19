@@ -5,7 +5,7 @@ const { isLogin } = require('../middleware/isLogIn');
 
 const router = express.Router();
 
-router.get('/',isLogin,getAllUsers);
+router.get('/',getAllUsers);
 
 
 module.exports = router;
