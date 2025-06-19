@@ -7,17 +7,26 @@ exports.jwtToken = (userId, res) => {
         { expiresIn: "30d" }
     );
 
-    // Set cookie with environment-appropriate settings
-    res.cookie('jwt', token, {
+    // iOS Safari-compatible cookie settings
+    const cookieOptions = {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        sameSite: "None",
-        secure: true, // Only secure in production
-        path: '/'
-    });
+        path: '/',
+        // Critical fixes for iOS Safari
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: process.env.NODE_ENV === 'production', // Must be true with SameSite=None
+    };
+
+    // Additional iOS Safari fix - set domain explicitly if cross-origin
+    if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
+        cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
+
+    res.cookie('jwt', token, cookieOptions);
 
     console.log('Generated token length:', token.length);
     console.log('Token starts with:', token.substring(0, 50) + '...');
+    console.log('Cookie options:', cookieOptions);
     
     return token;
 };
