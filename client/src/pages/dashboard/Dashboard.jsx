@@ -591,10 +591,10 @@ function Dashboard() {
           {user && (
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 bg-gradient-to-r from-red-500 to-red-600 text-white p-3 cursor-pointer rounded-lg font-semibold shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 active:scale-98 mt-auto"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-full font-medium shadow-sm hover:shadow-md hover:shadow-red-500/30 transition-all duration-200 active:scale-95 mb-0 sm:mb-0 mb-20 border border-red-400/20"
             >
-              <FaDoorClosed />
-              <span>Logout</span>
+              <FaDoorClosed className="w-4 h-4" />
+              <span className="text-sm">Logout</span>
             </button>
           )}
         </aside>
