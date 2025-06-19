@@ -1,13 +1,12 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken'); // Although jwtToken handles signing, keep for clarity if other jwt uses exist
-const { jwtToken } = require('../utils/jwtToken'); // Ensure this path is correct
+const jwt = require('jsonwebtoken');
 
-exports.Signup = async(req, res) => {
+// Signup Controller
+exports.Signup = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Validate input
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
@@ -15,17 +14,15 @@ exports.Signup = async(req, res) => {
             });
         }
 
-        const user = await User.findOne({ username });
-
-        if (user) {
-            return res.status(409).json({ // 409 Conflict is more appropriate
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(409).json({
                 success: false,
                 message: "User already exists"
             });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({
             username,
@@ -39,20 +36,20 @@ exports.Signup = async(req, res) => {
             message: "Signup successful!"
         });
 
-    } catch(error) {
-        console.error("Registration error:", error);
+    } catch (error) {
+        console.error("Signup error:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error during registration"
         });
     }
-}
+};
 
-exports.Login = async(req, res) => {
+// Login Controller
+exports.Login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Validate input
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
@@ -62,61 +59,57 @@ exports.Login = async(req, res) => {
 
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(401).json({ // 401 Unauthorized is more appropriate
-                success: false,
-                message: "Invalid credentials"
-            });
-        }
-
-        const comparePassword = await bcrypt.compare(password, user.password);
-        if (!comparePassword) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid credentials"
             });
         }
 
-        // The jwtToken utility function handles setting the cookie with proper attributes
-        const token = jwtToken(user._id, res);
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
+        }
+
+        // Generate JWT (no cookie)
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "30d" }
+        );
 
         res.status(200).json({
             success: true,
+            message: "Login successful",
             _id: user._id,
             username: user.username,
-            message: "Login successful",
-            token // Although token is also in cookie, returning it can be useful for client-side logic
+            token // Send token for frontend to store
         });
 
-    } catch(error) {
+    } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error during login"
         });
     }
-}
+};
 
-exports.LogOut = async(req, res) => {
+// Logout Controller
+exports.LogOut = async (req, res) => {
     try {
-        // When clearing a cookie, it's good practice to match the options
-        // that were used when setting it, especially path, domain, and secure/sameSite.
-        res.clearCookie('jwt', {
-            path: '/',
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None' // Consistent with setting
-        });
-
+        // No cookie clearing needed
         res.status(200).json({
             success: true,
             message: "Logout successful"
         });
-
-    } catch(error) {
+    } catch (error) {
         console.error("Logout error:", error);
         res.status(500).json({
             success: false,
             message: "Internal server error during logout"
         });
     }
-}
+};

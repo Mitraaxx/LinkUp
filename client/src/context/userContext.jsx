@@ -5,49 +5,56 @@ const UserContext = createContext();
 
 // Provider component to wrap around your app
 const UserProvider = ({ children }) => {
-    // Initialize state with localStorage data to prevent flickering issues
     const [user, setUser] = useState(() => {
         try {
             const storedUser = localStorage.getItem("userData");
             return storedUser ? JSON.parse(storedUser) : null;
-        } catch (error) {
-            console.error("Error parsing stored user data:", error);
+        } catch (err) {
+            console.error("Failed to parse userData:", err);
             return null;
         }
     });
-    const [loading, setLoading] = useState(false);
+
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setLoading(true);
         try {
             const storedUser = localStorage.getItem("userData");
-            console.log("Fetched user from localStorage:", storedUser);
             if (storedUser) {
                 setUser(JSON.parse(storedUser));
             }
-        } catch (error) {
-            console.error("Error loading user data:", error);
+        } catch (err) {
+            console.error("Error reading userData from localStorage:", err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Function to update user data
     const updateUser = (newUserData) => {
         try {
             setUser(newUserData);
             if (newUserData) {
                 localStorage.setItem("userData", JSON.stringify(newUserData));
+                if (newUserData.token) {
+                    localStorage.setItem("token", newUserData.token); // Save token separately
+                }
             } else {
                 localStorage.removeItem("userData");
+                localStorage.removeItem("token");
             }
-        } catch (error) {
-            console.error("Error saving user data:", error);
+        } catch (err) {
+            console.error("Failed to update user:", err);
         }
     };
 
+    const logoutUser = () => {
+        setUser(null);
+        localStorage.removeItem("userData");
+        localStorage.removeItem("token");
+    };
+
     return (
-        <UserContext.Provider value={{ user, updateUser, loading }}>
+        <UserContext.Provider value={{ user, updateUser, logoutUser, loading }}>
             {children}
         </UserContext.Provider>
     );
@@ -62,5 +69,4 @@ const useUser = () => {
     return context;
 };
 
-// Export everything
 export { UserProvider, useUser };

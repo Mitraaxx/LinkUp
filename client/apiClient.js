@@ -1,31 +1,20 @@
-// src/utils/axios.js
+// apiClient.js
 import axios from 'axios';
 
-// Create an instance of Axios
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, // This ensures cookies are sent with requests
+  baseURL: 'https://linkup-server.onrender.com/api', // Replace with your actual backend URL
+  withCredentials: false, // 🔴 Disable cookie sending
 });
 
-// Optionally, you can add request and response interceptors
-apiClient.interceptors.request.use(
-  (config) => {
-    // You can add authorization headers or other configurations here
-    // config.headers['Authorization'] = `Bearer ${yourToken}`;
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
+// ✅ Automatically attach token from localStorage to headers
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token'); // 🔐 Your stored token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
-
 
 export default apiClient;
