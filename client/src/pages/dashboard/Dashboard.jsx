@@ -371,8 +371,8 @@ if (stream) {
 }
 
 // Reset mic and camera states
-setIsMicOn(true);
-setIsCamOn(true);
+setIsMicOn(false);
+setIsCamOn(false);
 
 // Clear video elements properly
 if (reciverVideo.current) {
