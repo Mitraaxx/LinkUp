@@ -8,9 +8,6 @@ import Dashboard from './pages/dashboard/dashboard';
 import IsLogin from './pages/auth/isLogin';
 
 
-
-
-
 function App() {
   const [count, setCount] = useState(0)
 
