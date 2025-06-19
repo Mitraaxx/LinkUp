@@ -559,13 +559,13 @@ function Dashboard() {
 
           {/* Logout */}
           {user && (
-            <div
+            <button
               onClick={handleLogout}
               className="flex items-center gap-3 bg-gradient-to-r from-red-500 to-red-600 text-white p-3 cursor-pointer rounded-lg font-semibold shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 active:scale-98 mt-auto"
             >
               <FaDoorClosed />
               <span>Logout</span>
-            </div>
+            </button>
           )}
         </aside>
 
