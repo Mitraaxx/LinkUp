@@ -19,14 +19,13 @@ apiClient.interceptors.request.use(
   }
 );
 
-apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle errors globally here
-    return Promise.reject(error);
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
+
 
 export default apiClient;
