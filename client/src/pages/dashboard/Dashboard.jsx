@@ -188,23 +188,23 @@ function Dashboard() {
           reciverVideo.current.volume = 1.0;
         }
 
-            // iOS-specific play handling
-    const playPromise = reciverVideo.current.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          console.log("Remote video playing");
-          // Unmute after successful play
-          setTimeout(() => {
-            reciverVideo.current.muted = false;
-          }, 500);
-        })
-        .catch(error => {
-          console.log("Remote video play failed:", error);
-          // Show tap-to-play overlay for iOS
-          showTapToPlayOverlay();
-        });
-    }
+        // iOS-specific play handling
+        const playPromise = reciverVideo.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log("Remote video playing");
+              // Unmute after successful play
+              setTimeout(() => {
+                reciverVideo.current.muted = false;
+              }, 500);
+            })
+            .catch((error) => {
+              console.log("Remote video play failed:", error);
+              // Show tap-to-play overlay for iOS
+              showTapToPlayOverlay();
+            });
+        }
       });
 
       socket.once("callAccepted", (data) => {
@@ -299,30 +299,29 @@ function Dashboard() {
 
       // Handle receiving remote stream - THIS WAS MISSING PROPER SETUP
       peer.on("stream", (remoteStream) => {
-  console.log("Received remote stream:", remoteStream);
-  if (reciverVideo.current) {
-    reciverVideo.current.srcObject = remoteStream;
-    reciverVideo.current.muted = false;
-    reciverVideo.current.volume = 1.0;
-    
-    // Ensure the video plays
-    const playPromise = reciverVideo.current.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          console.log("Remote video playing");
-          setTimeout(() => {
-            reciverVideo.current.muted = false;
-          }, 500);
-        })
-        .catch(error => {
-          console.log("Remote video play failed:", error);
-          showTapToPlayOverlay();
-        });
-    }
-  }
-});
+        console.log("Received remote stream:", remoteStream);
+        if (reciverVideo.current) {
+          reciverVideo.current.srcObject = remoteStream;
+          reciverVideo.current.muted = false;
+          reciverVideo.current.volume = 1.0;
 
+          // Ensure the video plays
+          const playPromise = reciverVideo.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log("Remote video playing");
+                setTimeout(() => {
+                  reciverVideo.current.muted = false;
+                }, 500);
+              })
+              .catch((error) => {
+                console.log("Remote video play failed:", error);
+                showTapToPlayOverlay();
+              });
+          }
+        }
+      });
 
       // CRITICAL: Signal the caller's offer to complete the connection
       peer.signal(callerSignal);
@@ -437,7 +436,7 @@ function Dashboard() {
 
     // Emit call end to other user
     socket.emit("callEnded", {
-      to: caller?.from || selectedUser?._id,
+      to: caller?.from || (selectedUser && selectedUser._id),
       name: user.username,
     });
 
@@ -471,11 +470,13 @@ function Dashboard() {
         )}
 
         {/* Sidebar */}
-                <aside className={`bg-white/70 backdrop-blur-3xl border border-blue-200/50 text-gray-800 w-80 h-screen p-6 space-y-6 fixed z-20 transition-transform shadow-3xl shadow-blue-200/50 flex flex-col
+        <aside
+          className={`bg-white/70 backdrop-blur-3xl border border-blue-200/50 text-gray-800 w-80 h-screen p-6 space-y-6 fixed z-20 transition-transform shadow-3xl shadow-blue-200/50 flex flex-col
             ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-            ${isSidebarOpen ? "w-full sm:w-80" : ""} // Added for better mobile experience if not already present
+            ${
+              isSidebarOpen ? "w-full sm:w-80" : ""
+            } // Added for better mobile experience if not already present
           `}
-
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -631,7 +632,7 @@ function Dashboard() {
                       ref={reciverVideo}
                       autoPlay
                       playsInline
-                      webkit-playsinline="true"  
+                      webkit-playsinline="true"
                       muted={false}
                       className="w-full h-full object-cover"
                       onLoadedMetadata={() =>
@@ -874,7 +875,6 @@ function Dashboard() {
               </div>
             </div>
           )}
-
 
           {reciveingCall && !callAccepted && (
             <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
