@@ -65,7 +65,13 @@ function Dashboard() {
       setCallerSignal(data.signal);
     });
 
+    // ✅ Fixed: Listen for both "callEnded" and "call-ended" events
     socket.on("callEnded", (data) => {
+      console.log("Call ended by", data.name);
+      endCallCleanup();
+    });
+
+    socket.on("call-ended", (data) => {
       console.log("Call ended by", data.name);
       endCallCleanup();
     });
@@ -75,21 +81,29 @@ function Dashboard() {
       setCallRejectedUser(data);
     });
 
+    // ✅ New: Handle peer connection termination
+    socket.on("peer-disconnected", (data) => {
+      console.log("Peer disconnected:", data);
+      endCallCleanup();
+    });
+
     return () => {
       socket.off("me");
       socket.off("online-users");
       socket.off("callToUser");
       socket.off("callEnded");
+      socket.off("call-ended"); // ✅ Clean up the new event listener
       socket.off("callRejected");
+      socket.off("peer-disconnected"); // ✅ Clean up peer disconnect listener
     };
   }, [user, socket]);
-  console.log("getting call from", caller);
 
+  console.log("getting call from", caller);
   console.log("Online Users State:", onlineUsers);
+  
   const isOnlineUser = (userId) => onlineUsers.some((u) => u.userId === userId);
 
   const allusers = async () => {
-    // Don't fetch users if current user is not loaded
     if (!user?._id) return;
 
     try {
@@ -106,7 +120,6 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Only fetch users when user data is available
     if (user?._id) {
       allusers();
     }
@@ -116,7 +129,6 @@ function Dashboard() {
     try {
       console.log("Starting call with user:", targetUserId);
 
-      // Stop existing stream if any
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -135,43 +147,35 @@ function Dashboard() {
       });
 
       console.log("Stream created:", currentStream);
-
       currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
 
       setStream(currentStream);
       setSelectedUser(targetUserId);
       setIsCallActive(true);
 
-      // Wait a bit for state to update before setting video source
       setTimeout(() => {
         if (myVideo.current && currentStream) {
           myVideo.current.srcObject = currentStream;
           myVideo.current.muted = false;
           myVideo.current.volume = 0;
-
-          // Ensure video plays
           myVideo.current.play().catch((e) => {
             console.log("Video play failed:", e);
           });
         }
       }, 100);
 
-      currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
       setCallRejectedPopUp(false);
       setIsSidebarOpen(false);
       setSelectedUser(showReciverDetail._id);
       console.log("calling to :", showReciverDetail._id);
 
-      // ✅ Create a new Peer connection (WebRTC) as the call initiator
       const peer = new Peer({
-        initiator: true, // ✅ This user starts the call
-        trickle: false, // ✅ Prevents trickling of ICE candidates, ensuring a single signal exchange
-        stream: currentStream, // ✅ Attach the local media stream
+        initiator: true,
+        trickle: false,
+        stream: currentStream,
       });
 
-      // ✅ Handle the "signal" event (this occurs when the WebRTC handshake is initiated)
       peer.on("signal", (data) => {
-        // ✅ Emit a "callToUser" event to the server with necessary call details
         socket.emit("callToUser", {
           callToUserId: showReciverDetail._id,
           signalData: data,
@@ -188,23 +192,30 @@ function Dashboard() {
           reciverVideo.current.volume = 1.0;
         }
 
-        // iOS-specific play handling
         const playPromise = reciverVideo.current.play();
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
               console.log("Remote video playing");
-              // Unmute after successful play
               setTimeout(() => {
                 reciverVideo.current.muted = false;
               }, 500);
             })
             .catch((error) => {
               console.log("Remote video play failed:", error);
-              // Show tap-to-play overlay for iOS
-              showTapToPlayOverlay();
             });
         }
+      });
+
+      // ✅ Handle peer connection close/error events
+      peer.on("close", () => {
+        console.log("Peer connection closed");
+        endCallCleanup();
+      });
+
+      peer.on("error", (err) => {
+        console.log("Peer connection error:", err);
+        endCallCleanup();
       });
 
       socket.once("callAccepted", (data) => {
@@ -224,7 +235,6 @@ function Dashboard() {
     }
   };
 
-  // Effect to handle video element updates when stream changes
   useEffect(() => {
     if (stream && myVideo.current && isCallActive) {
       console.log("Updating video element with stream");
@@ -240,7 +250,6 @@ function Dashboard() {
 
   const filteredUsers = users.filter(
     (u) =>
-      // Exclude current logged-in user
       u._id !== user?._id &&
       ((u.username?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
         (u.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()))
@@ -269,10 +278,10 @@ function Dashboard() {
 
       setStream(currentStream);
       setCallAccepted(true);
-      setReciveingCall(false); // Changed from true to false
+      setReciveingCall(false);
       setIsSidebarOpen(false);
+      setIsCallActive(true); // ✅ Set call as active
 
-      // Set up local video
       if (myVideo.current) {
         myVideo.current.srcObject = currentStream;
         myVideo.current.muted = true;
@@ -281,14 +290,12 @@ function Dashboard() {
 
       currentStream.getAudioTracks().forEach((track) => (track.enabled = true));
 
-      // Create peer connection for the call receiver
       const peer = new Peer({
         initiator: false,
         trickle: false,
         stream: currentStream,
       });
 
-      // Handle signal generation
       peer.on("signal", (data) => {
         socket.emit("answeredCall", {
           signal: data,
@@ -297,7 +304,6 @@ function Dashboard() {
         });
       });
 
-      // Handle receiving remote stream - THIS WAS MISSING PROPER SETUP
       peer.on("stream", (remoteStream) => {
         console.log("Received remote stream:", remoteStream);
         if (reciverVideo.current) {
@@ -305,7 +311,6 @@ function Dashboard() {
           reciverVideo.current.muted = false;
           reciverVideo.current.volume = 1.0;
 
-          // Ensure the video plays
           const playPromise = reciverVideo.current.play();
           if (playPromise !== undefined) {
             playPromise
@@ -317,16 +322,23 @@ function Dashboard() {
               })
               .catch((error) => {
                 console.log("Remote video play failed:", error);
-                showTapToPlayOverlay();
               });
           }
         }
       });
 
-      // CRITICAL: Signal the caller's offer to complete the connection
-      peer.signal(callerSignal);
+      // ✅ Handle peer connection close/error events
+      peer.on("close", () => {
+        console.log("Peer connection closed");
+        endCallCleanup();
+      });
 
-      // Store the peer connection reference
+      peer.on("error", (err) => {
+        console.log("Peer connection error:", err);
+        endCallCleanup();
+      });
+
+      peer.signal(callerSignal);
       connectionRef.current = peer;
     } catch (error) {
       console.log("Error in accepting call:", error);
@@ -344,6 +356,7 @@ function Dashboard() {
     });
   };
 
+  // ✅ Enhanced cleanup function
   const endCallCleanup = () => {
     console.log("Cleaning up call...");
 
@@ -355,17 +368,23 @@ function Dashboard() {
       });
     }
 
-    // Clear video elements
+    // Clear video elements properly
     if (reciverVideo.current) {
       reciverVideo.current.srcObject = null;
+      reciverVideo.current.pause();
     }
     if (myVideo.current) {
       myVideo.current.srcObject = null;
+      myVideo.current.pause();
     }
 
     // Destroy peer connection
     if (connectionRef.current) {
-      connectionRef.current.destroy();
+      try {
+        connectionRef.current.destroy();
+      } catch (err) {
+        console.log("Error destroying peer:", err);
+      }
       connectionRef.current = null;
     }
 
@@ -379,11 +398,11 @@ function Dashboard() {
     setCallerSignal(null);
     setShowReciverDetailPopUp(false);
     setShowReciverDetail(null);
+    setIsSidebarOpen(true); // ✅ Show sidebar again
 
     console.log("Call cleanup completed");
   };
 
-  // toggle mic
   const toggleMic = () => {
     if (stream) {
       const audioTrack = stream.getAudioTracks()[0];
@@ -406,7 +425,6 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      // Stop video stream before logout
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
@@ -431,19 +449,40 @@ function Dashboard() {
     }
   };
 
+  // ✅ Enhanced call end function
   const handleCallEnd = () => {
     console.log("Ending call...");
 
-    // Emit call end to other user
-    socket.emit("call-ended", {
-      to: caller?.from || selectedUser, // ✅ Send call end signal to the caller or selected user
-      name: user.username // ✅ Send the username to inform the other party
+    // ✅ Determine who to send the end call signal to
+    let targetUser = null;
+    if (caller?.from) {
+      targetUser = caller.from; // If we received the call
+    } else if (selectedUser) {
+      targetUser = selectedUser; // If we initiated the call
+    } else if (showReciverDetail?._id) {
+      targetUser = showReciverDetail._id; // Fallback
+    }
+
+    // ✅ Emit call end to the other user
+    if (targetUser) {
+      socket.emit("call-ended", {
+        to: targetUser,
+        from: me,
+        name: user.username,
+        userId: user._id
+      });
+    }
+
+    // ✅ Also emit a peer disconnect signal
+    socket.emit("peer-disconnected", {
+      to: targetUser,
+      from: me,
+      name: user.username
     });
 
     // Clean up locally
     endCallCleanup();
   };
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
