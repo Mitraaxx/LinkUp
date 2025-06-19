@@ -356,34 +356,10 @@ function Dashboard() {
     });
   };
 
-  const stopAllMediaTracks = async () => {
-  // Stop current stream
-  if (stream) {
-    stream.getTracks().forEach((track) => {
-      track.stop();
-      track.enabled = false;
-    });
-  }
-  
-  // Force stop any lingering media streams
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    // This forces the browser to release media device access
-    navigator.mediaDevices.getUserMedia({ video: false, audio: false })
-      .then(stream => {
-        stream.getTracks().forEach(track => track.stop());
-      })
-      .catch(() => {}); // Ignore errors
-  } catch (error) {
-    console.log("Error stopping media devices:", error);
-  }
-};
-
   // ✅ Enhanced cleanup function
-  const endCallCleanup = async() => {
+  const endCallCleanup = () => {
     console.log("Cleaning up call...");
 
-    await stopAllMediaTracks();
     // Stop all media tracks
     // Stop all media tracks
 if (stream) {
@@ -395,18 +371,18 @@ if (stream) {
 }
 
 // Reset mic and camera states
-setIsMicOn(false);
-setIsCamOn(false);
+setIsMicOn(true);
+setIsCamOn(true);
 
 // Clear video elements properly
- if (reciverVideo.current) {
-    reciverVideo.current.srcObject = null;
-    reciverVideo.current.load(); // ✅ Add this to reset the video element
-  }
-  if (myVideo.current) {
-    myVideo.current.srcObject = null;
-    myVideo.current.load(); // ✅ Add this to reset the video element
-  }
+if (reciverVideo.current) {
+  reciverVideo.current.srcObject = null;
+  reciverVideo.current.pause();
+}
+if (myVideo.current) {
+  myVideo.current.srcObject = null;
+  myVideo.current.pause();
+}
 
     // Destroy peer connection
     if (connectionRef.current) {
