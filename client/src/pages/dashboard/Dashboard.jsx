@@ -187,6 +187,24 @@ function Dashboard() {
           reciverVideo.current.muted = false;
           reciverVideo.current.volume = 1.0;
         }
+
+            // iOS-specific play handling
+    const playPromise = reciverVideo.current.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log("Remote video playing");
+          // Unmute after successful play
+          setTimeout(() => {
+            reciverVideo.current.muted = false;
+          }, 500);
+        })
+        .catch(error => {
+          console.log("Remote video play failed:", error);
+          // Show tap-to-play overlay for iOS
+          showTapToPlayOverlay();
+        });
+    }
       });
 
       socket.once("callAccepted", (data) => {
@@ -291,6 +309,21 @@ function Dashboard() {
           reciverVideo.current.play().catch((e) => {
             console.log("Remote video play failed:", e);
           });
+           const playPromise = reciverVideo.current.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log("Remote video playing");
+          setTimeout(() => {
+            reciverVideo.current.muted = false;
+          }, 500);
+        })
+        .catch(error => {
+          console.log("Remote video play failed:", error);
+          showTapToPlayOverlay();
+        });
+  
+          
         }
       });
 
@@ -601,6 +634,8 @@ function Dashboard() {
                       ref={reciverVideo}
                       autoPlay
                       playsInline
+                      webkit-playsinline="true"  
+                      muted={false}
                       className="w-full h-full object-cover"
                       onLoadedMetadata={() =>
                         console.log("Remote video metadata loaded")
@@ -649,6 +684,7 @@ function Dashboard() {
                       ref={myVideo}
                       autoPlay
                       playsInline
+                      webkit-playsinline="true"
                       muted
                       className="w-32 h-24 md:w-40 md:h-30 object-cover"
                       onLoadedMetadata={() =>
