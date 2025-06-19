@@ -100,7 +100,7 @@ function Dashboard() {
 
   console.log("getting call from", caller);
   console.log("Online Users State:", onlineUsers);
-  
+
   const isOnlineUser = (userId) => onlineUsers.some((u) => u.userId === userId);
 
   const allusers = async () => {
@@ -361,22 +361,28 @@ function Dashboard() {
     console.log("Cleaning up call...");
 
     // Stop all media tracks
-    if (stream) {
-      stream.getTracks().forEach((track) => {
-        track.stop();
-        console.log("Stopped track:", track.kind);
-      });
-    }
+    // Stop all media tracks
+if (stream) {
+  stream.getTracks().forEach((track) => {
+    track.stop();
+    track.enabled = false; // ✅ Explicitly disable the track
+    console.log("Stopped track:", track.kind);
+  });
+}
 
-    // Clear video elements properly
-    if (reciverVideo.current) {
-      reciverVideo.current.srcObject = null;
-      reciverVideo.current.pause();
-    }
-    if (myVideo.current) {
-      myVideo.current.srcObject = null;
-      myVideo.current.pause();
-    }
+// Reset mic and camera states
+setIsMicOn(true);
+setIsCamOn(true);
+
+// Clear video elements properly
+if (reciverVideo.current) {
+  reciverVideo.current.srcObject = null;
+  reciverVideo.current.pause();
+}
+if (myVideo.current) {
+  myVideo.current.srcObject = null;
+  myVideo.current.pause();
+}
 
     // Destroy peer connection
     if (connectionRef.current) {
@@ -469,7 +475,7 @@ function Dashboard() {
         to: targetUser,
         from: me,
         name: user.username,
-        userId: user._id
+        userId: user._id,
       });
     }
 
@@ -477,7 +483,7 @@ function Dashboard() {
     socket.emit("peer-disconnected", {
       to: targetUser,
       from: me,
-      name: user.username
+      name: user.username,
     });
 
     // Clean up locally
