@@ -27,13 +27,14 @@ const server = createServer(app);
 const allowedOrigins = [process.env.CLIENT_URL];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true); // Allow request
-        } else {
-            callback(new Error('Not allowed by CORS')); // Block request
-        }
-    },
+    // origin: function (origin, callback) {
+    //     if (!origin || allowedOrigins.includes(origin)) {
+    //         callback(null, true); // Allow request
+    //     } else {
+    //         callback(new Error('Not allowed by CORS')); // Block request
+    //     }
+    // },
+    origin: "https://lynkup.netlify.app",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
 }));
@@ -52,7 +53,8 @@ app.get('/', (req, res) => {
 const io = new Server(server, {
     pingTimeout: 60000,
     cors: {
-        origin: allowedOrigins[0],
+        // origin: allowedOrigins[0],
+        origin: "https://lynkup.netlify.app",
         methods: ["GET", "POST"],
     }
 });
