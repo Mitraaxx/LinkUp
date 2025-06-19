@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.post('/register', Signup);
 router.post('/Login', Login);
-router.post('/Logout', isLogin, LogOut);
+router.post('/Logout', LogOut);
+// yaha mene ek isLogin middleware udaya hai
 
 
 
