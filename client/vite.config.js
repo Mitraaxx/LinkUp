@@ -1,7 +1,12 @@
+import react from 'react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [],
+  plugins: [
+    react(),
+    tailwindcss()
+  ],
   
   // Use ESBuild for React (built into Vite)
   esbuild: {
