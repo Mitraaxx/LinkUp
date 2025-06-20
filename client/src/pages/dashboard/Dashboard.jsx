@@ -633,14 +633,15 @@ function Dashboard() {
 
           {/* Logout */}
           {user && (
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 active:scale-95 border border-red-400/20 text-sm tracking-wide" // Matched font-light, rounded-lg, shadow and tracking-wide
-            >
-              <FaDoorClosed className="w-4 h-4" />
-              <span className="text-sm">Logout</span>
-            </button>
-          )}
+  <button
+    onClick={handleLogout}
+    className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 active:scale-95 border border-red-400/20 text-sm tracking-wide
+               mb-0 md:mb-0 lg:mb-0 xl:mb-0 2xl:mb-0 sm:mb-8" // Added responsive margin-bottom
+  >
+    <FaDoorClosed className="w-4 h-4" />
+    <span className="text-sm">Logout</span>
+  </button>
+)}
         </aside>
 
         {/* Main Content */}
