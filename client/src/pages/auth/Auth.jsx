@@ -1,35 +1,61 @@
-import React, { useState } from "react";
-import { User, Lock } from "lucide-react";
+import { useState } from 'react';
+import { FaUser, FaLock } from 'react-icons/fa';
+import toast, { Toaster } from 'react-hot-toast';
+import { Link, useNavigate } from 'react-router-dom';
+import apiClient from '../../../apiClient';
+import { useUser } from '../../context/userContext';
 
-function AuthFontMatched({ type = "login" }) {
+function Auth({ type }) {
+  const { updateUser } = useUser();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-    confirmPassword: "",
+    username: '',
+    password: '',
+    confirmPassword: ''
   });
+
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (type === "signup" && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+    if (type === 'signup' && formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match!');
       return;
     }
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      alert(
-        `${type === "signup" ? "Account created" : "Logged in"} successfully!`
-      );
+    try {
+      const endpoint = type === 'signup' ? '/auth/register' : '/auth/Login';
+      const { data } = await apiClient.post(endpoint, {
+        username: formData.username,
+        password: formData.password
+      });
+
+      toast.success(data.message || 'Success!');
+
+      if (type === 'signup') {
+        navigate('/login');
+      }
+
+      if (type === 'login') {
+        // Save token in localStorage
+        localStorage.setItem('token', data.token);
+        updateUser(data);
+        navigate('/');
+      }
+
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong!');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -44,34 +70,32 @@ function AuthFontMatched({ type = "login" }) {
         <div className="relative z-10">
           <div className="text-center mb-6">
             <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <User className="text-white text-lg" />
+              <FaUser className="text-white text-lg" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-light text-blue-900 tracking-wide leading-tight mb-1">
-              {type === "signup" ? "Create Account" : "Welcome Back"}
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1">
+              {type === 'signup' ? 'Create Account' : 'Welcome Back'}
             </h2>
-            <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">
-              LinkUp
-            </p>
+            <p className="text-gray-600 text-xs tracking-wide">LinkUp</p>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
-              icon={<User />}
+              icon={<FaUser />}
               name="username"
               type="text"
               placeholder="Username"
               onChange={handleChange}
             />
             <InputField
-              icon={<Lock />}
+              icon={<FaLock />}
               name="password"
               type="password"
               placeholder="Password"
               onChange={handleChange}
             />
-            {type === "signup" && (
+            {type === 'signup' && (
               <InputField
-                icon={<Lock />}
+                icon={<FaLock />}
                 name="confirmPassword"
                 type="password"
                 placeholder="Confirm Password"
@@ -80,51 +104,42 @@ function AuthFontMatched({ type = "login" }) {
             )}
 
             <button
-              onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-blue-700 to-indigo-600 text-white py-3 rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-blue-700/30 transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-sm tracking-wide"
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-700 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg hover:shadow-blue-700/30 transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-base"
               disabled={loading}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-500 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
               <span className="relative z-10">
-                {loading
-                  ? "Processing..."
-                  : type === "signup"
-                  ? "Create Account"
-                  : "Log In"}
+                {loading ? 'Processing...' : type === 'signup' ? 'Create Account' : 'Log In'}
               </span>
             </button>
-          </div>
+          </form>
 
           <div className="mt-6 text-center">
             <div className="flex items-center justify-center mb-3">
               <div className="h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent w-full"></div>
             </div>
-            <p className="text-xs text-blue-500 font-light tracking-wide">
-              {type === "signup" ? (
+            <p className="text-gray-600 text-xs">
+              {type === 'signup' ? (
                 <>
-                  Already have an account?{" "}
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline"
-                  >
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 hover:underline">
                     Log In
-                  </button>
+                  </Link>
                 </>
               ) : (
                 <>
-                  Don't have an account?{" "}
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline"
-                  >
+                  Don't have an account?{' '}
+                  <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 hover:underline">
                     Create Account
-                  </button>
+                  </Link>
                 </>
               )}
             </p>
           </div>
         </div>
       </div>
+      <Toaster position="top-center" />
     </div>
   );
 }
@@ -133,14 +148,12 @@ function InputField({ icon, name, type, placeholder, onChange }) {
   return (
     <div className="group">
       <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-3 transition-all duration-300 hover:bg-white focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-300/50">
-        <div className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600">
-          {icon}
-        </div>
+        <div className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600">{icon}</div>
         <input
           type={type}
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-blue-800 placeholder-blue-500 focus:outline-none focus:placeholder-blue-600 transition-colors duration-300 text-sm font-light leading-relaxed"
+          className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none focus:placeholder-gray-600 transition-colors duration-300 text-sm"
           onChange={onChange}
           required
         />
@@ -149,4 +162,4 @@ function InputField({ icon, name, type, placeholder, onChange }) {
   );
 }
 
-export default AuthFontMatched;
+export default Auth;
