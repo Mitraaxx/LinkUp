@@ -518,114 +518,116 @@ function Dashboard() {
           `}
         >
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  Users
-                </h1>
-                <p className="text-gray-600 text-xs tracking-wide">LinkUp</p>
+<div className="flex items-center justify-between">
+  <div className="flex items-center gap-3">
+    <div>
+      <h1 className="text-xl sm:text-2xl font-light bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent tracking-wide leading-tight">
+        Users
+      </h1>
+      <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">LinkUp</p>
+    </div>
+  </div>
+  <button
+    type="button"
+    className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 p-2 rounded-lg transition-all duration-300"
+    onClick={() => setIsSidebarOpen(false)}
+    title="Close sidebar"
+  >
+    <FaTimes size={18} />
+  </button>
+</div>
+
+{/* Search */}
+<div className="group">
+  <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-3 transition-all duration-300 hover:bg-white focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-300/50">
+    <FaSearch className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600" />
+    <input
+      type="text"
+      placeholder="Search users..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="w-full bg-transparent text-blue-800 placeholder-blue-500 focus:outline-none focus:placeholder-blue-600 transition-colors duration-300 text-sm font-light leading-relaxed"
+    />
+  </div>
+</div>
+
+{/* User List */}
+<div className="flex-1 overflow-hidden">
+  <div className="h-full overflow-y-auto space-y-3 pr-2">
+    {loading ? (
+      <div className="flex items-center justify-center p-4">
+        <div className="text-blue-600 text-sm font-light tracking-wide">Loading users...</div>
+      </div>
+    ) : (
+      filteredUsers.map((userItem) => (
+        <div
+          key={userItem._id}
+          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ${
+            selectedUser === userItem._id && isCallActive
+              ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
+              : "bg-white/60 backdrop-blur-sm border border-blue-200/30 hover:bg-white hover:border-blue-300 hover:shadow-md hover:shadow-blue-200/30"
+          }`}
+          onClick={() => handleSelectedUser(userItem)}
+        >
+          <div className="relative">
+            {userItem.profilepic ? (
+              <>
+                <img
+                  src={userItem.profilepic}
+                  alt={`${userItem.username}'s profile`}
+                  className={`w-12 h-12 rounded-full border-2 ${
+                    selectedUser === userItem._id && isCallActive
+                      ? "border-white"
+                      : "border-blue-200"
+                  } transition-all duration-300`}
+                />
+                {isOnlineUser(userItem._id) && (
+                  <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-lg animate-bounce"></span>
+                )}
+              </>
+            ) : (
+              <div
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-light text-base transition-all duration-300 relative ${
+                  selectedUser === userItem._id && isCallActive
+                    ? "bg-white text-blue-600 border-white"
+                    : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-blue-200"
+                }`}
+              >
+                {userItem.username?.charAt(0)?.toUpperCase() || "U"}
+                {isOnlineUser(userItem._id) && (
+                  <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-lg"></span>
+                )}
               </div>
-            </div>
-            <button
-              type="button"
-              className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 p-2 rounded-lg transition-all duration-300"
-              onClick={() => setIsSidebarOpen(false)}
-              title="Close sidebar"
+            )}
+          </div>
+
+          <div className="flex flex-col flex-1 min-w-0">
+            <span
+              className={`font-light text-sm truncate tracking-wide ${
+                selectedUser === userItem._id && isCallActive
+                  ? "text-white"
+                  : "text-blue-800"
+              }`}
             >
-              <FaTimes size={18} />
-            </button>
+              {userItem.username}
+            </span>
+            <span
+              className={`text-xs truncate font-light tracking-wide ${
+                selectedUser === userItem._id && isCallActive
+                  ? "text-blue-100"
+                  : "text-blue-500"
+              }`}
+            >
+              {userItem.email}
+            </span>
           </div>
+        </div>
+      ))
+    )}
+  </div>
+</div>
 
-          {/* Search */}
-          <div className="group">
-            <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-3 transition-all duration-300 hover:bg-white focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-300/50">
-              <FaSearch className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600" />
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none focus:placeholder-gray-600 transition-colors duration-300 text-sm"
-              />
-            </div>
-          </div>
-
-          {/* User List */}
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto space-y-3 pr-2">
-              {loading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="text-blue-600 text-sm">Loading users...</div>
-                </div>
-              ) : (
-                filteredUsers.map((userItem) => (
-                  <div
-                    key={userItem._id}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ${
-                      selectedUser === userItem._id && isCallActive
-                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
-                        : "bg-white/60 backdrop-blur-sm border border-blue-200/30 hover:bg-white hover:border-blue-300 hover:shadow-md hover:shadow-blue-200/30"
-                    }`}
-                    onClick={() => handleSelectedUser(userItem)}
-                  >
-                    <div className="relative">
-                      {userItem.profilepic ? (
-                        <>
-                          <img
-                            src={userItem.profilepic}
-                            alt={`${userItem.username}'s profile`}
-                            className={`w-12 h-12 rounded-full border-2 ${
-                              selectedUser === userItem._id && isCallActive
-                                ? "border-white"
-                                : "border-blue-200"
-                            } transition-all duration-300`}
-                          />
-                          {isOnlineUser(userItem._id) && (
-                            <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-lg animate-bounce"></span>
-                          )}
-                        </>
-                      ) : (
-                        <div
-                          className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-base transition-all duration-300 relative ${
-                            selectedUser === userItem._id && isCallActive
-                              ? "bg-white text-blue-600 border-white"
-                              : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-blue-200"
-                          }`}
-                        >
-                          {userItem.username?.charAt(0)?.toUpperCase() || "U"}
-                          {isOnlineUser(userItem._id) && (
-                            <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-lg"></span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <span
-                        className={`font-semibold text-sm truncate ${
-                          selectedUser === userItem._id && isCallActive
-                            ? "text-white"
-                            : "text-gray-800"
-                        }`}
-                      >
-                        {userItem.username}
-                      </span>
-                      <span
-                        className={`text-xs truncate ${
-                          selectedUser === userItem._id && isCallActive
-                            ? "text-blue-100"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {userItem.email}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          ]
 
           {/* Logout */}
           {user && (
