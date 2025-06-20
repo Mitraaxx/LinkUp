@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { FaUser, FaLock } from 'react-icons/fa'; // Using react-icons for consistency with the provided Auth component
-import toast, { Toaster } from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
-import apiClient from '../../../apiClient'; // Assuming apiClient is correctly configured
-import { useUser } from '../../context/userContext'; // Assuming useUser context is available
+import React, { useState } from "react";
+import { FaUser, FaLock } from "react-icons/fa"; // Using react-icons for consistency with the provided Auth component
+import toast, { Toaster } from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import apiClient from "../../../apiClient"; // Assuming apiClient is correctly configured
+import { useUser } from "../../context/userContext"; // Assuming useUser context is available
 
 function Auth({ type }) {
   const { updateUser } = useUser();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -23,33 +23,33 @@ function Auth({ type }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (type === 'signup' && formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match!');
+    if (type === "signup" && formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match!");
       return;
     }
 
     setLoading(true);
 
     try {
-      const endpoint = type === 'signup' ? '/auth/register' : '/auth/Login';
+      const endpoint = type === "signup" ? "/auth/register" : "/auth/Login";
       const { data } = await apiClient.post(endpoint, {
         username: formData.username,
-        password: formData.password
+        password: formData.password,
       });
 
-      toast.success(data.message || 'Success!');
+      toast.success(data.message || "Success!");
 
-      if (type === 'signup') {
-        navigate('/login');
+      if (type === "signup") {
+        navigate("/login");
       }
 
-      if (type === 'login') {
-        localStorage.setItem('token', data.token);
+      if (type === "login") {
+        localStorage.setItem("token", data.token);
         updateUser(data);
-        navigate('/');
+        navigate("/");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Something went wrong!');
+      toast.error(error.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -70,9 +70,11 @@ function Auth({ type }) {
               <FaUser className="text-white text-lg" />
             </div>
             <h2 className="text-xl sm:text-2xl font-light text-blue-900 tracking-wide leading-tight mb-1">
-              {type === 'signup' ? 'Create Account' : 'Welcome Back'}
+              {type === "signup" ? "Create Account" : "Welcome Back"}
             </h2>
-            <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">LinkUp</p>
+            <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">
+              LinkUp
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,7 +92,7 @@ function Auth({ type }) {
               placeholder="Password"
               onChange={handleChange}
             />
-            {type === 'signup' && (
+            {type === "signup" && (
               <InputField
                 icon={<FaLock />}
                 name="confirmPassword"
@@ -107,7 +109,11 @@ function Auth({ type }) {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-500 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
               <span className="relative z-10">
-                {loading ? 'Processing...' : type === 'signup' ? 'Create Account' : 'Log In'}
+                {loading
+                  ? "Processing..."
+                  : type === "signup"
+                  ? "Create Account"
+                  : "Log In"}
               </span>
             </button>
           </form>
@@ -117,17 +123,23 @@ function Auth({ type }) {
               <div className="h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent w-full"></div>
             </div>
             <p className="text-xs text-blue-500 font-light tracking-wide">
-              {type === 'signup' ? (
+              {type === "signup" ? (
                 <>
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 hover:underline"
+                  >
                     Log In
                   </Link>
                 </>
               ) : (
                 <>
-                  Don't have an account?{' '}
-                  <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline">
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    to="/signup"
+                    className="bg-gradient-to-r  from-blue-500 to-cyan-500 bg-clip-text text-transparent font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 hover:underline"
+                  >
                     Create Account
                   </Link>
                 </>
@@ -145,7 +157,9 @@ function InputField({ icon, name, type, placeholder, onChange }) {
   return (
     <div className="group">
       <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-3 transition-all duration-300 hover:bg-white focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-300/50">
-        <div className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600">{icon}</div>
+        <div className="text-blue-500 mr-2 transition-colors duration-300 group-focus-within:text-blue-600">
+          {icon}
+        </div>
         <input
           type={type}
           name={name}
