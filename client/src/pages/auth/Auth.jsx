@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { FaUser, FaLock } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaUser, FaLock } from 'react-icons/fa'; // Using react-icons for consistency with the provided Auth component
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import apiClient from '../../../apiClient';
-import { useUser } from '../../context/userContext';
+import apiClient from '../../../apiClient'; // Assuming apiClient is correctly configured
+import { useUser } from '../../context/userContext'; // Assuming useUser context is available
 
 function Auth({ type }) {
   const { updateUser } = useUser();
@@ -14,7 +14,6 @@ function Auth({ type }) {
     password: '',
     confirmPassword: ''
   });
-
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -45,12 +44,10 @@ function Auth({ type }) {
       }
 
       if (type === 'login') {
-        // Save token in localStorage
         localStorage.setItem('token', data.token);
         updateUser(data);
         navigate('/');
       }
-
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong!');
     } finally {
@@ -72,10 +69,10 @@ function Auth({ type }) {
             <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg shadow-blue-500/30">
               <FaUser className="text-white text-lg" />
             </div>
-            <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1">
+            <h2 className="text-xl sm:text-2xl font-light text-blue-900 tracking-wide leading-tight mb-1">
               {type === 'signup' ? 'Create Account' : 'Welcome Back'}
             </h2>
-            <p className="text-gray-600 text-xs tracking-wide">LinkUp</p>
+            <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">LinkUp</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -105,7 +102,7 @@ function Auth({ type }) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-700 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg hover:shadow-blue-700/30 transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-base"
+              className="w-full bg-gradient-to-r from-blue-700 to-indigo-600 text-white py-3 rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-blue-700/30 transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-sm tracking-wide"
               disabled={loading}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-500 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
@@ -119,18 +116,18 @@ function Auth({ type }) {
             <div className="flex items-center justify-center mb-3">
               <div className="h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent w-full"></div>
             </div>
-            <p className="text-gray-600 text-xs">
+            <p className="text-xs text-blue-500 font-light tracking-wide">
               {type === 'signup' ? (
                 <>
                   Already have an account?{' '}
-                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 hover:underline">
+                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline">
                     Log In
                   </Link>
                 </>
               ) : (
                 <>
                   Don't have an account?{' '}
-                  <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 hover:underline">
+                  <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-light transition-colors duration-300 hover:underline">
                     Create Account
                   </Link>
                 </>
@@ -153,7 +150,7 @@ function InputField({ icon, name, type, placeholder, onChange }) {
           type={type}
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none focus:placeholder-gray-600 transition-colors duration-300 text-sm"
+          className="w-full bg-transparent text-blue-800 placeholder-blue-500 focus:outline-none focus:placeholder-blue-600 transition-colors duration-300 text-sm font-light leading-relaxed"
           onChange={onChange}
           required
         />

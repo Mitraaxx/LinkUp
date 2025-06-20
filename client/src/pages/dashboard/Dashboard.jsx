@@ -635,7 +635,7 @@ function Dashboard() {
           {user && (
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-full font-medium shadow-sm hover:shadow-md hover:shadow-red-500/30 transition-all duration-200 active:scale-95 mb-0 sm:mb-0 mb-20 border border-red-400/20"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 active:scale-95 border border-red-400/20 text-sm tracking-wide" // Matched font-light, rounded-lg, shadow and tracking-wide
             >
               <FaDoorClosed className="w-4 h-4" />
               <span className="text-sm">Logout</span>
@@ -906,145 +906,152 @@ function Dashboard() {
           </div>
 
           {/* User Details Popup */}
-{showReciverDetailPopUp && showReciverDetail && (
-  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white/80 backdrop-blur-3xl border border-blue-200/50 rounded-2xl shadow-2xl shadow-blue-200/50 max-w-sm w-full p-8 relative">
-      {/* Close Button */}
-      <button
-        onClick={() => setShowReciverDetailPopUp(false)}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 p-2 rounded-full transition-all duration-300"
-      >
-        <FaTimes size={16} />
-      </button>
+          {showReciverDetailPopUp && showReciverDetail && (
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white/80 backdrop-blur-3xl border border-blue-200/50 rounded-2xl shadow-2xl shadow-blue-200/50 max-w-sm w-full p-8 relative">
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowReciverDetailPopUp(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 p-2 rounded-full transition-all duration-300"
+                >
+                  <FaTimes size={16} />
+                </button>
 
-      {/* User Info */}
-      <div className="flex flex-col items-center text-center">
-        {/* Profile Picture */}
-        <div className="relative mb-4">
-          {showReciverDetail?.profilepic ? (
-            <img
-              src={showReciverDetail.profilepic}
-              alt={`${showReciverDetail.username}'s profile`}
-              className="w-20 h-20 rounded-full border-3 border-blue-200/50 shadow-lg"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
-              {showReciverDetail?.username
-                ?.charAt(0)
-                ?.toUpperCase() || "U"}
+                {/* User Info */}
+                <div className="flex flex-col items-center text-center">
+                  {/* Profile Picture */}
+                  <div className="relative mb-4">
+                    {showReciverDetail?.profilepic ? (
+                      <img
+                        src={showReciverDetail.profilepic}
+                        alt={`${showReciverDetail.username}'s profile`}
+                        className="w-20 h-20 rounded-full border-3 border-blue-200/50 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
+                        {showReciverDetail?.username
+                          ?.charAt(0)
+                          ?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    {/* Online Status */}
+                    {isOnlineUser(showReciverDetail._id) && (
+                      <span className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 border-3 border-white rounded-full shadow-lg flex items-center justify-center">
+                        <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* User Details */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-light text-blue-900 tracking-wide leading-tight mb-1">
+                      {showReciverDetail?.username}
+                    </h3>
+                    <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">
+                      {showReciverDetail?.email}
+                    </p>
+                    {isOnlineUser(showReciverDetail._id) && (
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-600 font-light tracking-wide">
+                          Online
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={handleCallStart}
+                      disabled={isCallActive}
+                      className={`flex-1 ${
+                        isCallActive
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500" // Matched gradient to Auth.jsx button
+                      } text-white px-6 py-3 rounded-lg font-light flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-700/30 active:scale-98 text-sm tracking-wide`}
+                    >
+                      <FaPhoneAlt size={16} />
+                      {isCallActive ? "In Call" : "Call"}
+                    </button>
+                    <button
+                      onClick={() => setShowReciverDetailPopUp(false)}
+                      className="flex-1 bg-white/60 backdrop-blur-sm border border-blue-200/50 text-blue-600 px-6 py-3 rounded-lg font-light hover:bg-white hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-blue-200/30 active:scale-98 text-sm tracking-wide" // Matched button style
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-          {/* Online Status */}
-          {isOnlineUser(showReciverDetail._id) && (
-            <span className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 border-3 border-white rounded-full shadow-lg flex items-center justify-center">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-            </span>
-          )}
-        </div>
 
-        {/* User Details */}
-        <div className="mb-6">
-          <h3 className="text-xl font-light text-blue-900 tracking-wide leading-tight mb-1">
-            {showReciverDetail?.username}
-          </h3>
-          <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">
-            {showReciverDetail?.email}
-          </p>
-          {isOnlineUser(showReciverDetail._id) && (
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-600 font-light tracking-wide">
-                Online
-              </span>
+          {reciveingCall && !callAccepted && (
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white/80 backdrop-blur-3xl border border-blue-200/50 rounded-2xl shadow-2xl shadow-blue-200/50 max-w-sm w-full p-8 relative">
+                {/* Incoming Call Indicator */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-4">
+                    <p className="text-xl font-light text-blue-900 tracking-wide leading-tight">
+                      {" "}
+                      {/* Matched heading style */}
+                      Incoming Call...
+                    </p>
+                  </div>
+
+                  {/* Profile Picture */}
+                  <div className="relative mb-4">
+                    {caller?.profilepic ? (
+                      <img
+                        src={caller.profilepic}
+                        alt={`${caller.name}'s profile`}
+                        className="w-20 h-20 rounded-full border-3 border-blue-200/50 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
+                        {caller?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    {/* Animated ring effect */}
+                    <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping"></div>
+                  </div>
+
+                  {/* Caller Details */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-light text-blue-900 tracking-wide leading-tight mb-1">
+                      {" "}
+                      {/* Matched heading style */}
+                      {caller?.name}
+                    </h3>
+                    <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">
+                      {caller?.email}
+                    </p>{" "}
+                    {/* Matched text style */}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 w-full">
+                    <button
+                      type="button"
+                      onClick={handleacceptCall}
+                      className="flex-1 bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white px-6 py-3 rounded-lg font-light flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-700/30 active:scale-98 text-sm tracking-wide" // Matched button style
+                    >
+                      <FaPhoneAlt size={16} />
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlerejectCall}
+                      className="flex-1 bg-white/60 backdrop-blur-sm border border-blue-200/50 text-blue-600 px-6 py-3 rounded-lg font-light hover:bg-white hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-blue-200/30 active:scale-98 text-sm tracking-wide" // Matched button style
+                    >
+                      <FaPhoneSlash size={16} />
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={handleCallStart}
-            disabled={isCallActive}
-            className={`flex-1 ${
-              isCallActive
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500" // Matched gradient to Auth.jsx button
-            } text-white px-6 py-3 rounded-lg font-light flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-700/30 active:scale-98 text-sm tracking-wide`}
-          >
-            <FaPhoneAlt size={16} />
-            {isCallActive ? "In Call" : "Call"}
-          </button>
-          <button
-            onClick={() => setShowReciverDetailPopUp(false)}
-            className="flex-1 bg-white/60 backdrop-blur-sm border border-blue-200/50 text-blue-600 px-6 py-3 rounded-lg font-light hover:bg-white hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-blue-200/30 active:scale-98 text-sm tracking-wide" // Matched button style
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-{reciveingCall && !callAccepted && (
-  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white/80 backdrop-blur-3xl border border-blue-200/50 rounded-2xl shadow-2xl shadow-blue-200/50 max-w-sm w-full p-8 relative">
-      {/* Incoming Call Indicator */}
-      <div className="flex flex-col items-center text-center">
-        <div className="mb-4">
-          <p className="text-xl font-light text-blue-900 tracking-wide leading-tight"> {/* Matched heading style */}
-            Incoming Call...
-          </p>
-        </div>
-
-        {/* Profile Picture */}
-        <div className="relative mb-4">
-          {caller?.profilepic ? (
-            <img
-              src={caller.profilepic}
-              alt={`${caller.name}'s profile`}
-              className="w-20 h-20 rounded-full border-3 border-blue-200/50 shadow-lg"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold border-3 border-blue-200/50 shadow-lg">
-              {caller?.name?.charAt(0)?.toUpperCase() || "U"}
-            </div>
-          )}
-          {/* Animated ring effect */}
-          <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping"></div>
-        </div>
-
-        {/* Caller Details */}
-        <div className="mb-6">
-          <h3 className="text-xl font-light text-blue-900 tracking-wide leading-tight mb-1"> {/* Matched heading style */}
-            {caller?.name}
-          </h3>
-          <p className="text-sm text-blue-600 font-light leading-relaxed tracking-wide">{caller?.email}</p> {/* Matched text style */}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 w-full">
-          <button
-            type="button"
-            onClick={handleacceptCall}
-            className="flex-1 bg-gradient-to-r from-blue-700 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white px-6 py-3 rounded-lg font-light flex items-center justify-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-700/30 active:scale-98 text-sm tracking-wide" // Matched button style
-          >
-            <FaPhoneAlt size={16} />
-            Accept
-          </button>
-          <button
-            type="button"
-            onClick={handlerejectCall}
-            className="flex-1 bg-white/60 backdrop-blur-sm border border-blue-200/50 text-blue-600 px-6 py-3 rounded-lg font-light hover:bg-white hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-blue-200/30 active:scale-98 text-sm tracking-wide" // Matched button style
-          >
-            <FaPhoneSlash size={16} />
-            Reject
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
         </main>
       </div>
     </div>
