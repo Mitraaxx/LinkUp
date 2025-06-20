@@ -521,7 +521,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                   Users
                 </h1>
                 <p className="text-gray-600 text-xs tracking-wide">LinkUp</p>
@@ -556,7 +556,7 @@ function Dashboard() {
             <div className="h-full overflow-y-auto space-y-3 pr-2">
               {loading ? (
                 <div className="flex items-center justify-center p-4">
-                  <div className="text-blue-600">Loading users...</div>
+                  <div className="text-blue-600 text-sm">Loading users...</div>
                 </div>
               ) : (
                 filteredUsers.map((userItem) => (
@@ -802,89 +802,100 @@ function Dashboard() {
               <div>
                 <div className="space-y-4 px-3 sm:px-6">
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-4 sm:mb-6 bg-white/90 backdrop-blur-sm border border-blue-200/60 p-5 sm:p-7 rounded-xl shadow-lg shadow-blue-200/20">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl flex-shrink-0 shadow-sm">
-          👋
-        </div>
-        <div className="text-center sm:text-left">
-          <h1 className="text-xl sm:text-3xl font-light text-blue-900 tracking-wide leading-tight mb-1">
-            Hey{" "}
-            <span className="font-normal text-blue-700">{user?.username || "Guest"}</span>!
-          </h1>
-          <p className="text-sm sm:text-lg text-blue-600 font-light leading-relaxed">
-            Ready to{" "}
-            <span className="font-medium text-blue-700">
-              connect with friends instantly?
-            </span>{" "}
-            Just{" "}
-            <span className="font-medium text-blue-700">select a user</span>{" "}
-            and start your video call.
-          </p>
-        </div>
-      </div>
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl flex-shrink-0 shadow-sm">
+                      👋
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <h1 className="text-xl sm:text-3xl font-light text-blue-900 tracking-wide leading-tight mb-1">
+                        Hey{" "}
+                        <span className="font-normal text-blue-700">
+                          {user?.username || "Guest"}
+                        </span>
+                        !
+                      </h1>
+                      <p className="text-sm sm:text-lg text-blue-600 font-light leading-relaxed">
+                        Ready to{" "}
+                        <span className="font-medium text-blue-700">
+                          connect with friends instantly?
+                        </span>{" "}
+                        Just{" "}
+                        <span className="font-medium text-blue-700">
+                          select a user
+                        </span>{" "}
+                        and start your video call.
+                      </p>
+                    </div>
+                  </div>
 
-      {/* Instructions Section - Refined Combo */}
-      <div className="bg-white/90 backdrop-blur-sm border border-blue-200/60 p-5 sm:p-7 rounded-xl shadow-lg shadow-blue-200/20">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-          <h2 className="text-base sm:text-lg font-light text-blue-900 tracking-wide">
-            HOW TO START A VIDEO CALL
-          </h2>
-          <div className="h-px bg-blue-200 flex-1"></div>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
-            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-              <span className="text-xs font-light text-blue-400 tracking-widest">01</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <span className="text-blue-500 text-lg">📌</span>
-                <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
-                  Open the sidebar to see online users
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
-            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-              <span className="text-xs font-light text-blue-400 tracking-widest">02</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <span className="text-blue-500 text-lg">🔍</span>
-                <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
-                  Use the search bar to find a specific person
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
-            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-              <span className="text-xs font-light text-blue-400 tracking-widest">03</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <span className="text-blue-500 text-lg">🎥</span>
-                <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
-                  Click on a user to start a video call instantly
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-6 pt-4 border-t border-blue-100">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <p className="text-xs sm:text-sm font-light text-blue-500 tracking-wide">
-              READY TO CONNECT
-            </p>
-          </div>
-        </div>
-      </div>
+                  {/* Instructions Section - Refined Combo */}
+                  <div className="bg-white/90 backdrop-blur-sm border border-blue-200/60 p-5 sm:p-7 rounded-xl shadow-lg shadow-blue-200/20">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                      <h2 className="text-base sm:text-lg font-light text-blue-900 tracking-wide">
+                        HOW TO START A VIDEO CALL
+                      </h2>
+                      <div className="h-px bg-blue-200 flex-1"></div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                          <span className="text-xs font-light text-blue-400 tracking-widest">
+                            01
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="text-blue-500 text-lg">📌</span>
+                            <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
+                              Open the sidebar to see online users
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                          <span className="text-xs font-light text-blue-400 tracking-widest">
+                            02
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="text-blue-500 text-lg">🔍</span>
+                            <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
+                              Use the search bar to find a specific person
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-blue-50/50 transition-all duration-200 border-l border-blue-200">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                          <span className="text-xs font-light text-blue-400 tracking-widest">
+                            03
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="text-blue-500 text-lg">🎥</span>
+                            <p className="text-sm sm:text-base font-light text-blue-800 leading-relaxed">
+                              Click on a user to start a video call instantly
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-blue-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <p className="text-xs sm:text-sm font-light text-blue-500 tracking-wide">
+                          READY TO CONNECT
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -929,10 +940,10 @@ function Dashboard() {
 
                   {/* User Details */}
                   <div className="mb-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
                       {showReciverDetail?.username}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                       {showReciverDetail?.email}
                     </p>
                     {isOnlineUser(showReciverDetail._id) && (
@@ -954,14 +965,14 @@ function Dashboard() {
                         isCallActive
                           ? "bg-gray-400 cursor-not-allowed"
                           : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                      } text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98`}
+                      } text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98 text-sm`}
                     >
                       <FaPhoneAlt size={16} />
                       {isCallActive ? "In Call" : "Call"}
                     </button>
                     <button
                       onClick={() => setShowReciverDetailPopUp(false)}
-                      className="flex-1 bg-white/60 backdrop-blur-sm border border-gray-200/50 text-gray-600 px-6 py-3 rounded-xl font-medium hover:bg-white hover:border-gray-300 transition-all duration-300 shadow-lg hover:shadow-gray-200/30 active:scale-98"
+                      className="flex-1 bg-white/60 backdrop-blur-sm border border-gray-200/50 text-gray-600 px-6 py-3 rounded-xl font-medium hover:bg-white hover:border-gray-300 transition-all duration-300 shadow-lg hover:shadow-gray-200/30 active:scale-98 text-sm"
                     >
                       Cancel
                     </button>
@@ -977,7 +988,7 @@ function Dashboard() {
                 {/* Incoming Call Indicator */}
                 <div className="flex flex-col items-center text-center">
                   <div className="mb-4">
-                    <p className="text-lg font-semibold text-gray-800 mb-4">
+                    <p className="text-base font-semibold text-gray-800 mb-4">
                       Incoming Call...
                     </p>
                   </div>
@@ -1001,10 +1012,10 @@ function Dashboard() {
 
                   {/* Caller Details */}
                   <div className="mb-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
                       {caller?.name}
                     </h3>
-                    <p className="text-sm text-gray-500">{caller?.email}</p>
+                    <p className="text-xs text-gray-500">{caller?.email}</p>
                   </div>
 
                   {/* Action Buttons */}
@@ -1012,7 +1023,7 @@ function Dashboard() {
                     <button
                       type="button"
                       onClick={handleacceptCall}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-green-500/30 active:scale-98 text-sm"
                     >
                       <FaPhoneAlt size={16} />
                       Accept
@@ -1020,7 +1031,7 @@ function Dashboard() {
                     <button
                       type="button"
                       onClick={handlerejectCall}
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-red-500/30 active:scale-98"
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-red-500/30 active:scale-98 text-sm"
                     >
                       <FaPhoneSlash size={16} />
                       Reject
