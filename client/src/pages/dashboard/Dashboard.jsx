@@ -633,14 +633,15 @@ function Dashboard() {
 
           {/* Logout */}
           {user && (
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white p-2.5 cursor-pointer rounded-full font-medium shadow-sm hover:shadow-md hover:shadow-red-500/30 transition-all duration-200 active:scale-95 mb-0 sm:mb-0 mb-20 border border-red-400/20"
-            >
-              <FaDoorClosed className="w-4 h-4" />
-              <span className="text-sm">Logout</span>
-            </button>
-          )}
+  <button
+    onClick={handleLogout}
+    className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 rounded-lg font-light shadow-md hover:shadow-lg hover:shadow-red-700/30 transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden text-sm tracking-wide flex items-center justify-center gap-2"
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+    <FaDoorClosed className="w-4 h-4 relative z-10" />
+    <span className="relative z-10">Logout</span>
+  </button>
+)}
         </aside>
 
         {/* Main Content */}
